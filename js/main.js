@@ -3,12 +3,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSlide = 0;
 
     function showSlide(index) {
+        // First fade out current slide
         slides.forEach(slide => {
-            slide.style.opacity = '0';
-            slide.style.transition = 'opacity 1s ease-in-out';
+            slide.classList.remove('active');
+            slide.classList.add('fade-out');
         });
-        
-        slides[index].style.opacity = '1';
+
+        // Wait for fade out to complete before showing new slide
+        setTimeout(() => {
+            slides.forEach(slide => {
+                slide.classList.remove('fade-out');
+            });
+            
+            // Add active class to new slide
+            slides[index].classList.add('active');
+        }, 800); // Match this with the fade-out transition time
     }
 
     function nextSlide() {
@@ -21,4 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Change slides every 5 seconds
     setInterval(nextSlide, 5000);
+
+    // Slow down video playback
+    const video = document.querySelector('.background-video');
+    video.playbackRate = 0.67; // This will make a 10s video play for ~15s
 }); 
