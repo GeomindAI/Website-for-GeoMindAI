@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/header.css">
     <link rel="icon" type="image/svg+xml" href="assets/Logo.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <header class="main-header">
@@ -21,10 +22,40 @@
                 <li class="dropdown">
                     <a href="/products">Products</a>
                     <div class="dropdown-content">
-                        <a href="/products/mineral-prospectivity">Mineral Prospectivity Mapping</a>
-                        <a href="/products/geofield">GeoField</a>
-                        <a href="/products/image-recognition">Mobile Image Recognition</a>
-                        <a href="/products/training-data">Training Data Sets</a>
+                        <div class="dropdown-section">
+                            <h3>AI Products</h3>
+                            <a href="/products/mineral-prospectivity" class="dropdown-item">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <div class="item-content">
+                                    <h4>Mineral Prospectivity Mapping</h4>
+                                    <p>AI-based mapping with customizable resolution</p>
+                                </div>
+                            </a>
+                            <a href="/products/geofield" class="dropdown-item">
+                                <i class="fas fa-tablet-alt"></i>
+                                <div class="item-content">
+                                    <h4>GeoField</h4>
+                                    <p>AI-powered field data management system</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="dropdown-section">
+                            <h3>Data Services</h3>
+                            <a href="/products/image-recognition" class="dropdown-item">
+                                <i class="fas fa-camera"></i>
+                                <div class="item-content">
+                                    <h4>Mobile Image Recognition</h4>
+                                    <p>Offline-capable outcrop analysis</p>
+                                </div>
+                            </a>
+                            <a href="/products/training-data" class="dropdown-item">
+                                <i class="fas fa-database"></i>
+                                <div class="item-content">
+                                    <h4>Training Data Sets</h4>
+                                    <p>Annotated geological samples for ML</p>
+                                </div>
+                            </a>
+                        </div>
                     </div>
                 </li>
                 <li class="dropdown">
