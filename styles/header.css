@@ -104,6 +104,21 @@
     color: #282c34;
 }
 
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Solutions dropdown specific hover */
+.dropdown:hover .solutions-dropdown {
+    display: grid;
+}
+
+/* Keep the existing products dropdown width */
+li:first-child .dropdown-content {
+    min-width: 800px;
+    padding: 2rem;
+}
+
 .dropdown-section {
     display: flex;
     flex-direction: column;
@@ -115,85 +130,80 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.dropdown-section h3 i {
+    color: #609981;
+    font-size: 1rem;
 }
 
 .dropdown-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
     align-items: center;
-    gap: 1.2rem;
-    padding: 1rem;
+    gap: 0.8rem;
+    padding: 0.5rem 1rem;
     border-radius: 8px;
     transition: background 0.2s ease;
     text-decoration: none;
-}
-
-.dropdown-item:hover {
-    background: #f5f5f5;
+    position: relative;
 }
 
 .dropdown-item i {
     color: #609981;
     font-size: 1.4rem;
-    min-width: 24px;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.item-content a {
+    text-decoration: none;
 }
 
 .item-content h4 {
     color: #282c34;
-    margin-bottom: 0.4rem;
+    margin: 0;
+    white-space: nowrap;
 }
 
 .item-content p {
     color: #666;
     font-size: 0.9rem;
     line-height: 1.5;
+    margin: 0;
 }
 
 /* Special styling for Solutions dropdown */
 .solutions-dropdown {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    display: none;
+    grid-template-columns: auto 300px;
+    min-width: fit-content;
+    max-width: 900px;
+    width: max-content;
 }
 
-.case-studies {
-    background: #f5f5f5;
+.solutions-dropdown .dropdown-section:first-child {
+    padding-right: 2rem;
+}
+
+.solutions-dropdown .case-studies {
+    background: #f8f9fa;
     margin: -2rem -2rem -2rem 0;
     padding: 2rem;
-    border-top-right-radius: 12px;
-    border-bottom-right-radius: 12px;
+    border-radius: 0 12px 12px 0;
+    width: 300px;
 }
 
-.case-studies h3 {
-    color: #282c34;
-    margin-bottom: 1rem;
+.solutions-dropdown .case-studies .dropdown-item {
+    grid-template-columns: 1fr;
 }
 
-.dropdown:hover .dropdown-content {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-}
-
-.dropdown-content a {
-    display: block;
-    padding: 0.5rem 1rem;
-}
-
-.dropdown > a::after {
-    content: '▾';
-    display: inline-block;
-    margin-left: 5px;
-}
-
-/* Update the solutions dropdown width */
+/* Remove specific width for solutions dropdown */
 li:nth-child(2) .dropdown-content {
-    min-width: 600px; /* Added specific width for solutions dropdown */
-    padding: 2rem;
-}
-
-/* Keep the existing products dropdown width */
-li:first-child .dropdown-content {
-    min-width: 800px;
     padding: 2rem;
 }
 
@@ -225,4 +235,32 @@ li:nth-child(3) .dropdown-content {
 
 .dropdown-section.case-studies .dropdown-item i {
     display: none;
+}
+
+.coming-soon-badge {
+    font-size: 0.7rem;
+    background-color: #666;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.dropdown-item.coming-soon {
+    opacity: 0.85;
+    cursor: default;
+    border: none;
+}
+
+.dropdown-item.coming-soon:hover {
+    background: transparent;
+}
+
+.dropdown-item.coming-soon .item-content h4,
+.dropdown-item.coming-soon .item-content p,
+.dropdown-item.coming-soon i {
+    color: #999;
 } 
