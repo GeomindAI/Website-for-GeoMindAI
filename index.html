@@ -6,6 +6,7 @@
     <title>GeoMind AI</title>
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/header.css">
+    <link rel="icon" type="image/svg+xml" href="assets/Logo.svg">
 </head>
 <body>
     <header class="main-header">
@@ -20,16 +21,18 @@
                 <li class="dropdown">
                     <a href="/products">Products</a>
                     <div class="dropdown-content">
-                        <a href="#">AI Solutions</a>
-                        <a href="#">Machine Learning</a>
-                        <a href="#">Data Processing</a>
+                        <a href="/products/mineral-prospectivity">Mineral Prospectivity Mapping</a>
+                        <a href="/products/geofield">GeoField</a>
+                        <a href="/products/image-recognition">Mobile Image Recognition</a>
+                        <a href="/products/training-data">Training Data Sets</a>
                     </div>
                 </li>
                 <li class="dropdown">
                     <a href="/solutions">Solutions</a>
                     <div class="dropdown-content">
-                        <a href="#">Success Stories</a>
-                        <a href="#">Client Results</a>
+                        <a href="/solutions/machine-learning">Machine Learning Services</a>
+                        <a href="/solutions/land-prospectivity">Land Claim Analysis</a>
+                        <a href="/solutions/area-assessment">Area Assessment</a>
                     </div>
                 </li>
                 <li class="dropdown">
@@ -59,10 +62,37 @@
     </main>
 
     <section class="technology-section">
-        <h2 class="section-title">Our Technology</h2>
+        <h2 class="section-title">Our Products</h2>
         <div class="divider"></div>
-        <h3 class="section-subtitle">Mineral Prospectivity Mapping</h3>
-        <a href="#" class="demo-link">Try the interactive demo!</a>
+        
+        <div class="product-grid">
+            <div class="product-card">
+                <h3 class="section-subtitle">Mineral Prospectivity Mapping</h3>
+                <p class="product-description">
+                    State-of-the-art AI/ML analysis for area prospectivity assessment. 
+                    Choose resolution from 5m to 1km for detailed heatmap analysis of your areas.
+                </p>
+                <div class="product-actions">
+                    <a href="#" class="demo-link">Try Demo</a>
+                    <a href="/products/mineral-prospectivity" class="learn-more">
+                        Learn More <span class="arrow">→</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <h3 class="section-subtitle">GeoField</h3>
+                <p class="product-description">
+                    AI-powered field data management system. Features image recognition for outcrops 
+                    and LLM-assisted data entry. A cost-effective alternative to traditional solutions.
+                </p>
+                <div class="product-actions">
+                    <a href="/products/geofield" class="learn-more">
+                        Learn More <span class="arrow">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
     </section>
 
     <script src="js/main.js"></script>
