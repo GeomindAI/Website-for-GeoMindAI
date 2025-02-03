@@ -26,7 +26,6 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: 0;
-    playback-rate: 0.67; /* This will make a 10s video play for ~15s */
 }
 
 .video-overlay {
