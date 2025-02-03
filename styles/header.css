@@ -170,9 +170,10 @@ li:first-child .dropdown-content {
 
 .item-content p {
     color: #666;
-    font-size: 0.95rem;
-    line-height: 1.4;
+    font-size: 0.7rem;
+    line-height: 1.2;
     margin: 0;
+    font-weight: normal;
 }
 
 .dropdown-item i {
@@ -245,17 +246,11 @@ li:nth-child(3) .dropdown-content {
     display: none;
 }
 
-.dropdown-item p {
-    font-size: 0.95rem;
-    line-height: 1.4;
-    margin: 0;
-}
-
 .coming-soon-badge {
-    font-size: 0.95rem;
-    color: #666;
+    font-size: 0.7rem;
+    color: #3f3f3f;
     font-weight: 500;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.9rem;
     background: #f5f5f5;
     border-radius: 4px;
 }
