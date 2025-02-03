@@ -58,7 +58,7 @@
     padding: 0.5rem 1.5rem !important;
     margin-left: 1.5rem;
     transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
 }
 
 .contact-button:hover {
@@ -185,7 +185,13 @@
     margin-left: 5px;
 }
 
-/* Special width for products dropdown */
+/* Update the solutions dropdown width */
+li:nth-child(2) .dropdown-content {
+    min-width: 600px; /* Added specific width for solutions dropdown */
+    padding: 2rem;
+}
+
+/* Keep the existing products dropdown width */
 li:first-child .dropdown-content {
     min-width: 800px;
     padding: 2rem;
@@ -201,4 +207,22 @@ li:first-child .dropdown-content {
 
 .dropdown-content > a:hover {
     background: #f5f5f5;
+}
+
+/* About Us dropdown width */
+li:nth-child(3) .dropdown-content {
+    min-width: 600px;
+    padding: 2rem;
+}
+
+/* Case Studies section styling */
+.dropdown-section.case-studies {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 0 12px 12px 0;
+    margin: -2rem -2rem -2rem 0;
+}
+
+.dropdown-section.case-studies .dropdown-item i {
+    display: none;
 } 

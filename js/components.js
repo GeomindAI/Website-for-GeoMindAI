@@ -5,4 +5,9 @@ function loadComponent(elementId, componentPath) {
             document.getElementById(elementId).innerHTML = data;
         })
         .catch(error => console.error('Error loading component:', error));
-} 
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadComponent('header-component', '/components/header.html');
+    loadComponent('footer-component', '/components/footer.html');
+}); 
