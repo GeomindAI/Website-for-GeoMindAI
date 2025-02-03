@@ -90,13 +90,6 @@ body {
     margin-bottom: 2rem;
 }
 
-.section-subtitle {
-    font-size: 2rem;  /* Reduced from 3rem */
-    font-weight: bold;
-    color: #F4DEA5;
-    margin-bottom: 1rem;  /* Added spacing */
-}
-
 .demo-link {
     font-size: 1.2rem;
     color: white;
@@ -161,10 +154,17 @@ body {
 }
 
 .coming-soon {
+    font-size: 0.95rem;
     color: #609981;
     font-weight: 600;
-    font-size: 1.1rem;
     padding: 0.5rem 1rem;
     border: 2px solid #609981;
     border-radius: 4px;
+}
+
+.section-subtitle {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #F4DEA5;
+    margin-bottom: 1rem;
 } 
