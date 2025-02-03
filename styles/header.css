@@ -105,7 +105,7 @@
 }
 
 .dropdown:hover .dropdown-content {
-    display: block;
+    display: grid;
 }
 
 /* Solutions dropdown specific hover */
@@ -113,10 +113,17 @@
     display: grid;
 }
 
-/* Keep the existing products dropdown width */
+/* Products dropdown specific styling */
 li:first-child .dropdown-content {
     min-width: 800px;
     padding: 2rem;
+    display: none;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.dropdown:hover li:first-child .dropdown-content {
+    display: grid;
 }
 
 .dropdown-section {
@@ -162,6 +169,9 @@ li:first-child .dropdown-content {
 
 .item-content a {
     text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
 }
 
 .item-content h4 {
