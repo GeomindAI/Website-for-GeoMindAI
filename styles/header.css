@@ -283,6 +283,8 @@ li:first-child .dropdown-content {
 /* About Us dropdown width */
 li:nth-child(3) .dropdown-content {
     min-width: 600px;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
     padding: 2rem;
 }
 
@@ -330,20 +332,6 @@ li:nth-child(3) .dropdown-content {
     font-weight: 600;
 }
 
-/* Fix for auto-selection issue */
-.solutions-dropdown {
-    display: none;
-}
-
-.dropdown:hover .solutions-dropdown {
-    display: grid;
-}
-
-/* Override any conflicting display properties */
-.solutions-dropdown:not(:hover) {
-    display: none;
-}
-
 /* Coming soon badge styling for case studies */
 .solutions-dropdown .case-studies .dropdown-item::after {
     content: 'Coming Soon';
@@ -357,4 +345,18 @@ li:nth-child(3) .dropdown-content {
     border-radius: 12px;
     font-size: 0.65rem;
     font-weight: 600;
+}
+
+/* Dropdown arrow styling */
+.nav-arrow {
+    font-size: 0.7rem;
+    margin-left: 0.3rem;
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+}
+
+/* Optional: rotate arrow on hover */
+.dropdown:hover .nav-arrow {
+    transform: rotate(180deg);
+    color: rgba(255, 255, 255, 0.9);
 } 
