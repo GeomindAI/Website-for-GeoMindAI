@@ -12,23 +12,31 @@
 .hero-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    position: relative;
 }
 
 .hero-image {
     max-width: 800px;
     width: 100%;
     height: auto;
-    margin-bottom: 2rem;
+    z-index: 1;
+    position: absolute;
+    top: 50%;
+    margin-top: 200px;
+    transform: translateY(-50%);
 }
 
 .hero-text {
     color: white;
     max-width: 800px;
+    margin-top: -50px;
+    position: relative;
+    z-index: 2;
 }
 
 .hero-text h1 {
@@ -213,14 +221,8 @@ p {
 
 .pricing-section h2 {
     font-size: 2.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     text-align: center;
-}
-
-.pricing-section > .container > p {
-    text-align: center;
-    color: #666;
-    margin-bottom: 3rem;
 }
 
 .pricing-grid {
@@ -232,27 +234,14 @@ p {
 
 .pricing-card {
     background: #f8f9fa;
-    padding: 2.5rem;
+    padding: 2rem;
     border-radius: 12px;
     text-align: center;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
+    transition: transform 0.3s ease;
 }
 
 .pricing-card:hover {
-    border-color: #609981;
     transform: translateY(-5px);
-}
-
-.pricing-card h3 {
-    color: #282c34;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.pricing-card p {
-    color: #666;
-    line-height: 1.5;
 }
 
 /* Case Studies Section */
@@ -262,33 +251,17 @@ p {
     padding: 6rem 0;
 }
 
-.case-studies-section h2 {
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-    text-align: center;
-}
-
 .case-study {
     background: rgba(255,255,255,0.05);
-    padding: 2.5rem;
-    border-radius: 12px;
+    padding: 2rem;
+    border-radius: 8px;
     margin-bottom: 2rem;
-    transition: transform 0.3s ease;
-}
-
-.case-study:hover {
-    transform: translateX(10px);
 }
 
 .case-study h3 {
-    color: #609981;
-    font-size: 1.3rem;
+    color: #F4DEA5;
     margin-bottom: 1rem;
-}
-
-.case-study p {
-    color: rgba(255,255,255,0.9);
-    line-height: 1.6;
+    font-size: 1.5rem;
 }
 
 /* FAQ Section */
@@ -297,24 +270,18 @@ p {
     padding: 6rem 0;
 }
 
-.faq-section h2 {
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-    text-align: center;
-}
-
 .faq-grid {
     display: grid;
     gap: 1.5rem;
     max-width: 800px;
-    margin: 0 auto;
+    margin: 3rem auto 0;
 }
 
 .faq-item {
     background: #f8f9fa;
-    padding: 2rem;
-    border-radius: 12px;
-    transition: transform 0.3s ease;
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
 .faq-item:hover {
@@ -336,23 +303,6 @@ p {
 .cta-container {
     text-align: center;
     margin-top: 3rem;
-}
-
-.cta-button {
-    display: inline-block;
-    padding: 1rem 2.5rem;
-    background: #609981;
-    color: white;
-    text-decoration: none;
-    border-radius: 30px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.cta-button:hover {
-    background: #4c7a67;
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 /* Responsive Design */
