@@ -195,10 +195,27 @@ li:first-child .dropdown-content {
     gap: 1rem;
 }
 
-.solutions-dropdown .dropdown-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
+.solutions-dropdown .dropdown-item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    align-items: start;
+    gap: 0.6rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    text-decoration: none;
+    position: relative;
+    color: inherit;
+    cursor: pointer;
+}
+
+.solutions-dropdown .dropdown-item:hover {
+    background: rgba(96, 153, 129, 0.1);
+}
+
+.solutions-dropdown .dropdown-item h4 {
+    color: inherit;
+    text-decoration: none;
 }
 
 .solutions-dropdown .case-studies {

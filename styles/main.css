@@ -207,7 +207,7 @@ body {
         rgba(96, 153, 129, 0.1), 
         rgba(244, 222, 165, 0.1)
     );
-    color: white;
+    color: rgb(0, 0, 0);
     box-shadow: 
         0 0 30px rgba(96, 153, 129, 0.3),
         0 0 60px rgba(244, 222, 165, 0.2);
@@ -221,46 +221,30 @@ body {
 /* Glowing effect */
 .button-glow {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(
-        circle at center,
-        rgba(96, 153, 129, 0.8),
-        rgba(244, 222, 165, 0.8),
-        transparent 70%
-    );
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #609981, #F4DEA5);
     opacity: 0;
-    transition: all 0.4s ease;
-    mix-blend-mode: overlay;
+    transition: opacity 0.4s ease;
+    border-radius: 32px;
+    z-index: -1;
 }
 
 .hero-cta:hover .button-glow {
     opacity: 1;
-    animation: pulseGlow 2s infinite;
+    animation: glowPulse 2s infinite;
 }
 
-@keyframes borderRotate {
+@keyframes glowPulse {
     0% {
-        filter: hue-rotate(0deg);
-    }
-    100% {
-        filter: hue-rotate(360deg);
-    }
-}
-
-@keyframes pulseGlow {
-    0% {
-        transform: scale(1);
-        opacity: 0.5;
+        opacity: 0.4;
     }
     50% {
-        transform: scale(1.05);
-        opacity: 0.8;
+        opacity: 0.6;
     }
     100% {
-        transform: scale(1);
-        opacity: 0.5;
+        opacity: 0.4;
     }
 } 
