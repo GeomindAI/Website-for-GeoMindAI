@@ -1,0 +1,29 @@
+# General data file patterns
+*.csv
+*.json
+*.dbf
+*.shp
+*.shx
+*.prj
+*.qix
+*.qmd
+*.cpg
+*.tif
+
+# Block all PNGs by default
+*.png
+
+# Exceptions - keep these files
+!package.json
+!quebec_bounds.json
+
+# Allow specific PNG files
+!assets/images/**/*.png
+!assets/newer-mineral-images/*.png
+!assets/images/*.png
+!assets/mineralicons/*.png
+
+# Common system files
+.DS_Store
+.env
+node_modules/ 
