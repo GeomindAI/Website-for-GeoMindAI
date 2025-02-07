@@ -3,8 +3,8 @@ const MINERALS = {
     AU: { 
         name: 'Gold', 
         symbol: 'AU',
-        imagePath: '../assets/MPM/newer-mineral-images/AU_heatmap.png',
-        iconPath: '../assets/MPM/mineralicons/goldore.png',
+        imagePath: '/assets/MPM/newer-mineral-images/AU_heatmap.png',
+        iconPath: '/assets/MPM/mineralicons/goldore.png',
         bounds: [
             [44.9930, -79.5720],  // Southwest corner
             [62.4910, -56.9430]   // Northeast corner
@@ -13,8 +13,8 @@ const MINERALS = {
     AG: { 
         name: 'Silver', 
         symbol: 'AG',
-        imagePath: '../assets/MPM/newer-mineral-images/AG_heatmap.png',
-        iconPath: '../assets/MPM/mineralicons/silverore.png',
+        imagePath: '/assets/MPM/newer-mineral-images/AG_heatmap.png',
+        iconPath: '/assets/MPM/mineralicons/silverore.png',
         bounds: [
             [44.9930, -79.5720],
             [62.4910, -56.9430]
@@ -23,8 +23,8 @@ const MINERALS = {
     CU: { 
         name: 'Copper', 
         symbol: 'CU',
-        imagePath: '../assets/MPM/newer-mineral-images/CU_heatmap.png',
-        iconPath: '../assets/MPM/mineralicons/copperore.png',
+        imagePath: '/assets/MPM/newer-mineral-images/CU_heatmap.png',
+        iconPath: '/assets/MPM/mineralicons/copperore.png',
         bounds: [
             [44.9930, -79.5720],
             [62.4910, -56.9430]
@@ -33,8 +33,8 @@ const MINERALS = {
     CO: { 
         name: 'Cobalt', 
         symbol: 'CO',
-        imagePath: '../assets/MPM/newer-mineral-images/CO_heatmap.png',
-        iconPath: '../assets/MPM/mineralicons/cobaltore.png',
+        imagePath: '/assets/MPM/newer-mineral-images/CO_heatmap.png',
+        iconPath: '/assets/MPM/mineralicons/cobaltore.png',
         bounds: [
             [44.9930, -79.5720],
             [62.4910, -56.9430]
@@ -43,8 +43,8 @@ const MINERALS = {
     NI: { 
         name: 'Nickel', 
         symbol: 'NI',
-        imagePath: '../assets/MPM/newer-mineral-images/NI_heatmap.png',
-        iconPath: '../assets/MPM/mineralicons/nickelore.png',
+        imagePath: '/assets/MPM/newer-mineral-images/NI_heatmap.png',
+        iconPath: '/assets/MPM/mineralicons/nickelore.png',
         bounds: [
             [44.9930, -79.5720],
             [62.4910, -56.9430]
@@ -111,7 +111,7 @@ class QuebecMap {
         ).addTo(this.map);
 
         // Add mask layer first and enable by default
-        fetch('../assets/MPM/tiles/masking.geojson')
+        fetch('/assets/MPM/tiles/masking.geojson')
             .then(response => response.json())
             .then(data => {
                 this.maskLayer = L.geoJSON(data, {
@@ -133,7 +133,7 @@ class QuebecMap {
         this.layerControl._overlaysList.appendChild(separator);
 
         // Add geology layers
-        fetch('../assets/MPM/tiles/Geology.geojson')
+        fetch('/assets/MPM/tiles/Geology.geojson')
             .then(response => response.json())
             .then(data => {
                 this.geologyLayer = L.geoJSON(data, {
@@ -148,7 +148,7 @@ class QuebecMap {
                 this.layerControl.addOverlay(this.geologyLayer, 'Bedrock Geology');
             });
 
-        fetch('../assets/MPM/tiles/faults.geojson')
+        fetch('/assets/MPM/tiles/faults.geojson')
             .then(response => response.json())
             .then(data => {
                 this.faultsLayer = L.geoJSON(data, {
@@ -168,7 +168,7 @@ class QuebecMap {
         this.layerControl._overlaysList.appendChild(pointsSeparator);
 
         // Add cobalt points
-        fetch('../assets/MPM/tiles/Co-2.geojson')
+        fetch('/assets/MPM/tiles/Co-2.geojson')
             .then(response => response.json())
             .then(data => {
                 this.cobaltSuperAnom = L.geoJSON(data, {
@@ -187,7 +187,7 @@ class QuebecMap {
                 this.layerControl.addOverlay(this.cobaltSuperAnom, 'Cobalt: Super Anom');
             });
 
-        fetch('../assets/MPM/tiles/Co-1.geojson')
+        fetch('/assets/MPM/tiles/Co-1.geojson')
             .then(response => response.json())
             .then(data => {
                 this.cobaltAnom = L.geoJSON(data, {
@@ -239,30 +239,7 @@ class QuebecMap {
         this.selectionBox = null;
     }
 
-    async loadData() {
-        try {
-            const response = await fetch('../assets/rock_samples.json');
-            const points = await response.json();
-            
-            points.forEach(point => {
-                const marker = L.circleMarker([point.lat, point.lng], {
-                    radius: 2,
-                    color: '#444',
-                    fillColor: '#666',
-                    fillOpacity: 0.7,
-                    weight: 1
-                });
-                
-                // Attach the mineral data to the marker
-                marker.data = point;
-                marker.addTo(this.samplePoints);
-            });
-            
-            console.log(`Loaded ${points.length} sample points`);
-        } catch (error) {
-            console.error('Error loading sample points:', error);
-        }
-    }
+
 
     bindEvents() {
         // Base layer changes
