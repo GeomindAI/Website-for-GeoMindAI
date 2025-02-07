@@ -115,6 +115,7 @@ class QuebecMap {
             .then(response => response.json())
             .then(data => {
                 this.maskLayer = L.geoJSON(data, {
+                interactive: false,
                     style: {
                         color: 'black',
                         fillColor: 'black',
@@ -137,6 +138,7 @@ class QuebecMap {
             .then(response => response.json())
             .then(data => {
                 this.geologyLayer = L.geoJSON(data, {
+                    interactive: false,
                     style: feature => ({
                         fillColor: `rgb(${feature.properties.RVB})`,
                         color: 'transparent',
@@ -152,6 +154,7 @@ class QuebecMap {
             .then(response => response.json())
             .then(data => {
                 this.faultsLayer = L.geoJSON(data, {
+                    interactive: false,
                     style: {
                         color: 'black',
                         weight: 1,
@@ -172,6 +175,7 @@ class QuebecMap {
             .then(response => response.json())
             .then(data => {
                 this.cobaltSuperAnom = L.geoJSON(data, {
+                    interactive: false,
                     pointToLayer: (feature, latlng) => {
                         return L.circleMarker(latlng, {
                             radius: 4,
@@ -191,6 +195,7 @@ class QuebecMap {
             .then(response => response.json())
             .then(data => {
                 this.cobaltAnom = L.geoJSON(data, {
+                    interactive: false,
                     pointToLayer: (feature, latlng) => {
                         return L.circleMarker(latlng, {
                             radius: 4,

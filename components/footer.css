@@ -21,6 +21,10 @@
 
 .logo-column {
     padding-right: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;  /* Add this line */
+    text-align: center;   /* Add this line */
 }
 
 .footer-divider {
@@ -33,6 +37,9 @@
     height: 120px;
     width: auto;
     margin-bottom: 1rem;
+    display: block;      /* Add this line */
+    margin-left: auto;   /* Add this line */
+    margin-right: auto;  /* Add this line */
 }
 
 .footer-email {
