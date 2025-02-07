@@ -10,6 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/components/footer.css">
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+                <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <style>
         .content-section {
             background: #F4DEA5;  /* Changed to beige color */
@@ -103,20 +108,574 @@
         </div>
     </section>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <!-- Demo Section -->
     <section id="demo" class="demo-section">
         <div class="container">
             <h2>Experience GeoMind AI's Mapping in Action</h2>
             <p>Explore our interactive demo to see how MPM works in real-time. Adjust resolution, upload sample data, and visualize high-potential zones for different elements.</p>
             
-            <div class="demo-container">
-                <!-- Demo content will go here -->
-                <div class="demo-placeholder">
-                    <p>Interactive Demo Coming Soon</p>
-                </div>
-            </div>
+
+    
+    <!-- Custom CSS for map controls -->
+        <style>
+            .slide-section {
+                margin: 40px 0;
+                padding: 30px;
+                background: #f8f9fa;
+                border-radius: 12px;
+                box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            }
+            
+            .slide-section.map-section {
+                background: none;
+                box-shadow: none;
+                padding: 0;
+                gap: 10px;
+            }
+            
+            .slide-image {
+                width: 100%;
+                max-width: 800px;
+                border-radius: 8px;
+                margin: 20px auto;
+                display: block;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+
+            .key-point {
+                background: #e9ecef;
+                padding: 20px;
+                border-left: 4px solid #495057;
+                margin: 20px 0;
+                border-radius: 0 8px 8px 0;
+            }
+
+            .metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin: 20px 0;
+            }
+
+            .metric-card {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                text-align: center;
+            }
+
+            .map-controls {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 80%;
+                margin: 10px auto;
+            }
+            
+            .layer-control, .mineral-control {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .layer-control select, .mineral-control select {
+                padding: 8px;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+                background-color: white;
+            }
+            
+            .loading-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .loading-content {
+                text-align: center;
+                color: white;
+            }
+
+            .spinner {
+                border: 4px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                border-top: 4px solid white;
+                width: 40px;
+                height: 40px;
+                margin: 0 auto 15px;
+                animation: spin 1s linear infinite;
+            }
+
+            .loading-text {
+                font-size: 16px;
+                margin: 0;
+                color: white;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .results-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                margin-top: 20px;
+            }
+            
+            .threshold-card, .stats-card {
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                width: 100%;
+            }
+            
+            .threshold-card {
+                background: #f8f9fa;
+                border-left: 4px solid #0d6efd;
+            }
+            
+            .threshold-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 10px;
+                margin-top: 10px;
+            }
+            
+            .threshold-item {
+                text-align: center;
+            }
+            
+            .threshold-item .mineral {
+                font-weight: 600;
+                color: #495057;
+                display: block;
+            }
+            
+            .threshold-item .value {
+                font-size: 0.9em;
+                color: #6c757d;
+            }
+            
+            .stats-card {
+                flex-grow: 1;
+            }
+            
+            .total-samples {
+                margin: 10px 0;
+                font-weight: 500;
+                color: #495057;
+            }
+            
+            .results-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            
+            .results-table th, .results-table td {
+                padding: 8px;
+                text-align: left;
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            .results-table th {
+                font-weight: 500;
+                color: #495057;
+            }
+
+            .mineral-card {
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .mineral-card h4 {
+                margin: 0 0 10px 0;
+                color: #333;
+            }
+
+            .mineral-card img {
+                width: 100%;
+                height: auto;
+                border-radius: 4px;
+            }
+
+            .alert-container {
+                width: 80%;
+                margin: 0 auto 10px;
+                display: flex;
+                justify-content: center;
+            }
+
+            .leaflet-control.leaflet-bar.alert-message {
+                background-color: #f8f9fa;
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+
+            .alert-icon {
+                margin-right: 10px;
+            }
+
+            .alert-message {
+                background: white;
+                padding: 10px 15px;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                font-size: 14px;
+                text-align: center;
+                max-width: 600px;
+            }
+
+            .alert-icon {
+                color: #3b82f6;
+                font-weight: bold;
+            }
+
+            .selection-instruction {
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.4);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                z-index: 1000;
+                font-size: 14px;
+                animation: fadeIn 0.3s ease-in-out;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translate(-50%, 10px); }
+                to { opacity: 1; transform: translate(-50%, 0); }
+            }
+
+            .map-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+            }
+
+            #quebec-map {
+                height: 400px;
+                width: 80%;
+                border-radius: 8px;
+                margin: 10px 0;
+            }
+
+            .mineral-viewer-control {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                font-size: 0.9em;
+            }
+
+            .selection-instruction.success {
+                background: rgba(22, 22, 22, 0.7);  /* 90% black background */
+                color: #ffffff;  /* Slightly adjusted green for better contrast on dark */
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 20px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            }
+
+            .selection-instruction.success:before {
+                content: '✓';
+                font-weight: bold;
+            }
+
+            .map-section p {
+                margin: 10px 0;  /* Reduced margin */
+                line-height: 1.4;  /* Better line height for readability */
+            }
+
+            .selection-results {
+                width: 80%;
+                padding: 10px 20px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                margin: 20px auto;
+                overflow: hidden;
+            }
+
+            .results-wrapper {
+                max-width: 100%;
+                gap: 10px;
+                padding: 0;
+            }
+
+            .results-header {
+                text-align: center;
+                margin-bottom: 5px;
+            }
+
+            .results-header h3 {
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #333;
+                margin: 0 0 5px 0;
+            }
+
+            .total-samples {
+                color: #444;
+                font-size: 1.1rem;
+                font-weight: 500;
+                margin: 0 0 10px 0;
+            }
+
+            .model-agreement-card {
+                background: #f8f9fa;
+                padding: 10px 15px; /* Reduced padding */
+                border-radius: 8px;
+                margin: 10px 0;
+                text-align: center;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .score-section {
+                margin-bottom: 8px; /* Reduced margin */
+            }
+
+            .score-section h4 {
+                margin: 0 0 5px 0; /* Tighter spacing */
+                color: #4b5563;
+                font-weight: 500;
+            }
+
+            .score-value {
+                font-size: 2.5rem;
+                font-weight: 900; /* Increased from bold to 900 */
+                margin: 0;
+                transition: color 0.3s ease;
+            }
+
+            /* Score color classes */
+            .score-low {
+                color: #4b5563; /* Gray */
+            }
+
+            .score-medium {
+                color: #d97706; /* Dark orange */
+            }
+
+            .score-high {
+                color: #059669; /* Green */
+            }
+
+            .signal-counts {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin-top: 10px;
+            }
+
+            .signal-count {
+                color: #666;
+            }
+
+            .results-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 12px;
+                text-align: center;
+                border-bottom: 1px solid #eee;
+            }
+
+            .results-table th {
+                font-weight: 500;
+                font-size: 1.1rem;
+                color: #333;
+            }
+
+            /* Update probability colors to match score colors */
+            .probability-low {
+                color: #4b5563; /* Same gray as score-low */
+            }
+
+            .probability-medium {
+                color: #d97706; /* Same dark orange as score-medium */
+            }
+
+            .probability-high {
+                color: #059669; /* Same green as score-high */
+            }
+
+            /* Add these styles */
+            .info-icon {
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                background: #e2e8f0;
+                border-radius: 50%;
+                text-align: center;
+                line-height: 16px;
+                font-size: 12px;
+                color: #4b5563;
+                cursor: help;
+                margin-left: 4px;
+                position: relative;
+            }
+
+            .tooltip {
+                visibility: hidden;
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #1f2937;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 10;
+                margin-bottom: 5px;
+                width: max-content;
+                max-width: 300px;
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+
+            .info-icon:hover .tooltip {
+                visibility: visible;
+                opacity: 1;
+            }
+
+            /* Add arrow to tooltip */
+            .tooltip::after {
+                content: '';
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                margin-left: -5px;
+                border-width: 5px;
+                border-style: solid;
+                border-color: #1f2937 transparent transparent transparent;
+            }
+
+            .mineral-icon {
+                width: 20px;
+                height: 20px;
+                vertical-align: middle;
+                margin-right: 8px;
+            }
+
+            .mineral-name {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div id="header"></div>
+            <div class="main-content-wrapper">
+                <main role="main">
+                    <div class="content">
+                        <h1>Predicting Quebec's Mineralization Potential with AI</h1>
+                        <div class="date-info" data-upload-date="2024-09-20" data-file-path="portfolio/hr-analytics.html">
+                            <p>Original Upload: 2025-01-25</p>
+                            <p>Last Updated: <span class="update-date"></span></p>
+                        </div>
+
+                        <!-- Interactive Map Section -->
+                        <div class="slide-section map-section">
+                            <h2>Interactive Map</h2>
+                            <p style="max-width: 700px; text-align: center;">
+                                View mineralization potential heatmaps and analyze 
+                                surficial potential by region across Quebec.
+                            </p>
+                            
+                            <div class="alert-container">
+                                <div class="leaflet-control leaflet-bar alert-message">
+                                    <span class="alert-icon">ⓘ</span>
+                                    Click "Predict Region" and select an area on the map to analyze mineral potential.
+                                </div>
+                            </div>
+                            
+                            <!-- Map container -->
+                            <div id="quebec-map"></div>
+                            
+                            <!-- Map controls -->
+                            <div class="map-controls">
+                                <div class="mineral-viewer-control">
+                                    <label>View Mineral Heatmaps:</label>
+                                    <select id="heatmapViewer">
+                                        <option value="">Select a mineral...</option>
+                                        <option value="AU">Gold (Au)</option>
+                                        <option value="AG">Silver (Ag)</option>
+                                        <option value="CU">Copper (Cu)</option>
+                                        <option value="CO">Cobalt (Co)</option>
+                                        <option value="NI">Nickel (Ni)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
         </div>
     </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <!-- Assessment Section -->
     <section class="assessment-section">
@@ -235,5 +794,16 @@
         });
     </script>
     <script src="/js/components.js"></script>
+    <script src="/js/quebec-map.js"></script>
+    <script src="https://unpkg.com/leaflet-mbtiles/leaflet-mbtiles.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+        <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </body>
 </html> 
