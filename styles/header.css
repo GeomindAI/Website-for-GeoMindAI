@@ -401,3 +401,63 @@ li:nth-child(3) .dropdown-content {
     color: #609981;
     -webkit-text-fill-color: initial;
 } 
+
+
+
+
+@media (max-width: 768px) {
+    .main-header {
+        padding: 1rem;
+        height: auto;
+    }
+
+    .header-left, .header-right {
+        margin: 0;
+    }
+
+    /* Mobile menu button */
+    .mobile-menu-btn {
+        display: block;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        cursor: pointer;
+        margin-right: 1rem;
+    }
+
+    .header-right {
+        display: none;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        width: 100%;
+        background: rgba(40, 44, 52, 0.98);
+        padding: 1rem;
+    }
+
+    .header-right.active {
+        display: block;
+    }
+
+    .header-right ul {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .dropdown-content {
+        position: static;
+        width: 100%;
+        min-width: unset;
+        transform: none;
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .contact-button {
+        margin: 1rem 0;
+        width: 100%;
+        text-align: center;
+    }
+}

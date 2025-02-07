@@ -307,34 +307,34 @@ p {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .hero-text h1 {
-        font-size: 2rem;
+    .hero-content {
+        padding: 1rem;
     }
-    
+
+    .hero-text h1 {
+        font-size: 1.8rem;
+    }
+
     .hero-text p {
         font-size: 1rem;
     }
-    
-    .features-grid {
+
+    .features-grid,
+    .benefits-grid {
         grid-template-columns: 1fr;
     }
 
-    .benefits-grid,
-    .pricing-grid {
-        grid-template-columns: 1fr;
+    #quebec-map {
+        width: 95%;
+        height: 300px;
     }
 
-    .assessment-section h2,
-    .pricing-section h2,
-    .case-studies-section h2,
-    .faq-section h2 {
-        font-size: 2rem;
+    .map-controls {
+        width: 95%;
+        flex-direction: column;
     }
 
-    .benefit-card,
-    .pricing-card,
-    .case-study,
-    .faq-item {
-        padding: 1.5rem;
+    .selection-results {
+        width: 95%;
     }
-} 
+}

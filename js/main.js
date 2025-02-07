@@ -25,13 +25,42 @@ document.addEventListener('DOMContentLoaded', () => {
         showSlide(currentSlide);
     }
 
-    // Show first slide
     showSlide(0);
-
-    // Change slides every 5 seconds
     setInterval(nextSlide, 5000);
 
-    // Slow down video playback
-    const video = document.querySelector('.background-video');
-    video.playbackRate = 0.67; // This will make a 10s video play for ~15s
-}); 
+    // Mobile menu initialization
+    if (window.innerWidth <= 768) {
+        const header = document.querySelector('.main-header');
+        const nav = document.querySelector('.header-right');
+        
+        const hamburger = document.createElement('button');
+        hamburger.className = 'mobile-menu-btn';
+        hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+        header.insertBefore(hamburger, nav);
+
+        hamburger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            nav.classList.toggle('active');
+            hamburger.innerHTML = nav.classList.contains('active') 
+                ? '<i class="fas fa-times"></i>' 
+                : '<i class="fas fa-bars"></i>';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!header.contains(e.target)) {
+                nav.classList.remove('active');
+                hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+    }
+});
+
+
+
+
+// Add to existing DOMContentLoaded listener
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.innerWidth <= 768) {
+        initializeMobileMenu();
+    }
+});
