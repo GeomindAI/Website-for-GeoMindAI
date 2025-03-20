@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="icon" href="./favicon.ico"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#1E3A8A"/><meta name="description" content="Laundry Service Analytics Dashboard - Analyze trends for your laundry delivery service"/><link rel="apple-touch-icon" href="./favicon.ico"/><link rel="manifest" href="./manifest.json"/><link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/><link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/><title>Laundry Service Analytics Dashboard</title><style>#root,body,html{height:100%;margin:0;padding:0}#debug{display:none;padding:20px;margin:20px;border:1px solid #ccc;background-color:#f5f5f5}#direct-load{margin:50px auto;max-width:800px;padding:20px;background-color:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.1);text-align:center}#direct-load h1{font-size:24px;margin-bottom:20px}#direct-load button{background-color:#1e3a8a;color:#fff;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;font-size:16px;margin:10px}#direct-load button:hover{background-color:#2c5282}</style><script>// Add error handling to capture and display issues
+      window.onerror = function(message, source, lineno, colno, error) {
+        const debugDiv = document.getElementById('debug');
+        if (debugDiv) {
+          debugDiv.style.display = 'block';
+          debugDiv.innerHTML += `<p><strong>Error:</strong> ${message}</p>`;
+          debugDiv.innerHTML += `<p><strong>Source:</strong> ${source}</p>`;
+          debugDiv.innerHTML += `<p><strong>Line:</strong> ${lineno}, <strong>Column:</strong> ${colno}</p>`;
+          if (error && error.stack) {
+            debugDiv.innerHTML += `<p><strong>Stack:</strong> <pre>${error.stack}</pre></p>`;
+          }
+        }
+        return false;
+      };
+      
+      // Check if resources are loading
+      window.addEventListener('DOMContentLoaded', function() {
+        const debugDiv = document.getElementById('debug');
+        if (debugDiv) {
+          debugDiv.innerHTML += '<p>DOMContentLoaded event fired!</p>';
+          
+          // Check manifest
+          fetch('./manifest.json')
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`Manifest failed to load: ${response.status} ${response.statusText}`);
+              }
+              return response.json();
+            })
+            .then(data => {
+              debugDiv.innerHTML += '<p>✅ Manifest loaded successfully</p>';
+            })
+            .catch(error => {
+              debugDiv.innerHTML += `<p>❌ Manifest error: ${error.message}</p>`;
+              
+              // Create a fallback manifest
+              const fallbackManifest = {
+                "short_name": "Laundry Analytics",
+                "name": "Laundry Service Analytics Dashboard",
+                "icons": [
+                  {
+                    "src": "favicon.ico",
+                    "sizes": "64x64 32x32 24x24 16x16",
+                    "type": "image/x-icon"
+                  }
+                ],
+                "start_url": ".",
+                "display": "standalone",
+                "theme_color": "#1E3A8A",
+                "background_color": "#F3F4F6"
+              };
+              
+              debugDiv.innerHTML += '<p>Created fallback manifest in memory</p>';
+              
+              // Store it for app to use
+              window.fallbackManifest = fallbackManifest;
+            });
+        }
+      });</script></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div><div id="debug"></div><div id="direct-load"><h1>Laundry Analytics Dashboard</h1><p>If you're seeing this, the dashboard React app didn't load correctly.</p><p>Common causes include:</p><ul style="text-align:left;display:inline-block"><li>Missing or corrupted resource files</li><li>JavaScript errors during initialization</li><li>Network issues loading required files</li></ul><div style="margin-top:20px"><button onclick='document.getElementById("debug").style.display="block"'>Show Debug Info</button> <button onclick="window.location.reload()">Reload Page</button> <button onclick='window.location.href="appointments.json"'>Try Accessing Data</button></div><script>// If React loads properly, this div will be hidden/replaced
+        setTimeout(function() {
+          const rootContent = document.getElementById('root').innerHTML.trim();
+          const directLoad = document.getElementById('direct-load');
+          
+          if (!rootContent) {
+            directLoad.style.display = 'block';
+            document.getElementById('debug').innerHTML += '<p>React did not render any content within 5 seconds</p>';
+          } else {
+            directLoad.style.display = 'none';
+          }
+        }, 5000);</script></div><script>!function(c){function e(e){for(var r,t,n=e[0],o=e[1],u=e[2],i=0,a=[];i<n.length;i++)t=n[i],f[t]&&a.push(f[t][0]),f[t]=0;for(r in o)Object.prototype.hasOwnProperty.call(o,r)&&(c[r]=o[r]);for(d&&d(e);a.length;)a.shift()();return p.push.apply(p,u||[]),l()}function l(){for(var e,r=0;r<p.length;r++){for(var t=p[r],n=!0,o=1;o<t.length;o++){var u=t[o];0!==f[u]&&(n=!1)}n&&(p.splice(r--,1),e=s(s.s=t[0]))}return e}var t={},f={1:0},p=[];function s(e){if(t[e])return t[e].exports;var r=t[e]={i:e,l:!1,exports:{}};return c[e].call(r.exports,r,r.exports,s),r.l=!0,r.exports}s.e=function(u){var e=[],t=f[u];if(0!==t)if(t)e.push(t[2]);else{var r=new Promise(function(e,r){t=f[u]=[e,r]});e.push(t[2]=r);var n,i=document.createElement("script");i.charset="utf-8",i.timeout=120,s.nc&&i.setAttribute("nonce",s.nc),i.src=s.p+"static/js/"+({}[u]||u)+"."+{3:"5b695df6"}[u]+".chunk.js",n=function(e){i.onerror=i.onload=null,clearTimeout(a);var r=f[u];if(0!==r){if(r){var t=e&&("load"===e.type?"missing":e.type),n=e&&e.target&&e.target.src,o=new Error("Loading chunk "+u+" failed.\n("+t+": "+n+")");o.type=t,o.request=n,r[1](o)}f[u]=void 0}};var a=setTimeout(function(){n({type:"timeout",target:i})},12e4);i.onerror=i.onload=n,document.head.appendChild(i)}return Promise.all(e)},s.m=c,s.c=t,s.d=function(e,r,t){s.o(e,r)||Object.defineProperty(e,r,{enumerable:!0,get:t})},s.r=function(e){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},s.t=function(r,e){if(1&e&&(r=s(r)),8&e)return r;if(4&e&&"object"==typeof r&&r&&r.__esModule)return r;var t=Object.create(null);if(s.r(t),Object.defineProperty(t,"default",{enumerable:!0,value:r}),2&e&&"string"!=typeof r)for(var n in r)s.d(t,n,function(e){return r[e]}.bind(null,n));return t},s.n=function(e){var r=e&&e.__esModule?function(){return e.default}:function(){return e};return s.d(r,"a",r),r},s.o=function(e,r){return Object.prototype.hasOwnProperty.call(e,r)},s.p="/1stop/dashboard/",s.oe=function(e){throw console.error(e),e};var r=window.webpackJsonp=window.webpackJsonp||[],n=r.push.bind(r);r.push=e,r=r.slice();for(var o=0;o<r.length;o++)e(r[o]);var d=n;l()}([])</script><script src="/1stop/dashboard/static/js/2.3225a022.chunk.js"></script><script src="/1stop/dashboard/static/js/main.ea5d66ed.chunk.js"></script></body></html>

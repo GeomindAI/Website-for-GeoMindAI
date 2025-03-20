@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Projection Calculator - 1Stop Laundry</title>
+    <!-- Include Recharts via CDN -->
+    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+    <style>
+        :root {
+            --color-primary: #1E40AF;
+            --color-primary-light: #3B82F6;
+            --color-secondary: #10B981;
+            --color-text: #1F2937;
+            --color-text-light: #6B7280;
+            --color-background: #F9FAFB;
+            --color-background-dark: #F3F4F6;
+            --color-card: #FFFFFF;
+            --color-border: #E5E7EB;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--color-text);
+            background-color: var(--color-background);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            color: var(--color-primary);
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: var(--color-text-light);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background-color: var(--color-card);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--color-text);
+        }
+        
+        .card-description {
+            font-size: 0.95rem;
+            color: var(--color-text-light);
+            margin-top: 5px;
+        }
+        
+        .card-content {
+            padding: 25px;
+        }
+        
+        .card-footer {
+            padding: 15px 25px;
+            background-color: var(--color-background-dark);
+            border-top: 1px solid var(--color-border);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        
+        @media (min-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--color-text);
+        }
+        
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        .info-box {
+            background-color: var(--color-background-dark);
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .info-box p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            background-color: #1E3A8A;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: #9CA3AF;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #6B7280;
+        }
+        
+        .stat-box {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-box:nth-child(1) {
+            background-color: #EFF6FF;
+        }
+        
+        .stat-box:nth-child(2) {
+            background-color: #ECFDF5;
+        }
+        
+        .stat-box:nth-child(3) {
+            background-color: #F3E8FF;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #1E40AF;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1E3A8A;
+        }
+        
+        .chart-container {
+            height: 350px;
+            margin-top: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        th {
+            background-color: var(--color-background-dark);
+            font-weight: 600;
+            color: var(--color-text);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        
+        tr:nth-child(even) {
+            background-color: var(--color-background);
+        }
+        
+        .highlight {
+            background-color: #F0F9FF;
+            font-weight: 500;
+        }
+        
+        .results-container {
+            display: none;
+        }
+        
+        .back-to-dashboard {
+            display: block;
+            margin: 20px auto;
+            text-align: center;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-to-dashboard:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>City Booking Projection Calculator</h1>
+            <p>Calculate booking projections for any new city based on population and density data</p>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">City Booking Projection Calculator</h2>
+                <p class="card-description">Calculate booking projections for any new city based on population and density (using standard model excluding London)</p>
+            </div>
+            <div class="card-content">
+                <div class="grid grid-2">
+                    <div>
+                        <div class="form-group">
+                            <label for="city-name">City Name</label>
+                            <input type="text" id="city-name" placeholder="Enter city name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="population">Population</label>
+                            <input type="number" id="population" placeholder="Enter population (e.g. 500000)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="density">Population Density (per km²)</label>
+                            <input type="number" id="density" placeholder="Enter density (e.g. 1200)">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="info-box">
+                            <p><strong>Projection Method:</strong></p>
+                            <p>Standard Model: <strong>Excluding London</strong></p>
+                            <p>Rate: <strong>5.57 bookings per 100k population</strong></p>
+                            <p><strong>Projection Formula:</strong></p>
+                            <p>Projected bookings = (Population / 100,000) × 5.57</p>
+                            <p class="text-sm">Monthly distribution is applied based on historical patterns</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-container">
+                    <button id="calculate-btn" class="btn">Calculate Projections</button>
+                    <button id="clear-btn" class="btn btn-secondary">Clear Form</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section - Hidden initially -->
+        <div id="results-container" class="results-container">
+            <!-- Results Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Projection Results for <span id="city-name-result"></span></h2>
+                    <p class="card-description">
+                        Population: <span id="population-result"></span> | 
+                        Density: <span id="density-result"></span>/km²
+                    </p>
+                </div>
+                <div class="card-content">
+                    <div class="grid grid-2" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-box">
+                            <div class="stat-label">Total 6-Month Projected Bookings</div>
+                            <div id="total-projected" class="stat-value">0</div>
+                        </div>
+                        
+                        <div class="stat-box">
+                            <div class="stat-label">Average Monthly Bookings</div>
+                            <div id="avg-monthly" class="stat-value">0</div>
+                        </div>
+                        
+                        <div class="stat-box">
+                            <div class="stat-label">Bookings per 100k Population</div>
+                            <div id="bookings-per-100k" class="stat-value">5.57</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-2">
+                <!-- Cities Comparison Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">City Comparison</h2>
+                        <p class="card-description">
+                            Comparing projected 6-month bookings against other cities
+                        </p>
+                    </div>
+                    <div class="card-content">
+                        <div id="cities-chart" class="chart-container"></div>
+                    </div>
+                </div>
+                
+                <!-- Monthly Projections Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Monthly Booking Projections</h2>
+                        <p class="card-description">
+                            Projected bookings by month for <span class="city-name-display"></span> vs. other cities
+                        </p>
+                    </div>
+                    <div class="card-content">
+                        <div id="monthly-chart" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comparison with Historical Cities -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Comparison with Historical Cities</h2>
+                    <p class="card-description">
+                        <span class="city-name-display"></span> vs. cities with real historical data
+                    </p>
+                </div>
+                <div class="card-content">
+                    <div id="historical-chart" class="chart-container"></div>
+                    <div class="info-box" style="margin-top: 20px;">
+                        <p><strong>Note:</strong></p>
+                        <p>This chart compares your city's projections with the actual monthly bookings from cities with historical data.</p>
+                        <p>London shows significantly higher bookings (which is why it's excluded from the projection model).</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Monthly Projection Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Monthly Booking Breakdown</h2>
+                    <p class="card-description">
+                        Detailed monthly projections for <span class="city-name-display"></span>
+                    </p>
+                </div>
+                <div class="card-content">
+                    <div style="overflow-x: auto;">
+                        <table id="monthly-table">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th style="text-align: right;">Projected Bookings</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthly-table-body">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div>
+                        <p><strong>Rate:</strong> 5.57 bookings per 100,000 population (excluding London)</p>
+                        <p>Monthly distribution pattern is based on the average across all historical cities.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <a href="/1stop/" class="back-to-dashboard">← Back to Dashboard Selection</a>
+    </div>
+    
+    <script>
+        // Booking ratios by city
+        const bookingRatios = {
+            'London': { totalBookings: 211, population: 400000, density: 600, bookingsPer100k: 52.75 },
+            'Ottawa': { totalBookings: 18, population: 1017449, density: 365, bookingsPer100k: 1.77 },
+            'Kitchener': { totalBookings: 56, population: 575847, density: 1664, bookingsPer100k: 9.72 },
+            'Hamilton': { totalBookings: 64, population: 569353, density: 511, bookingsPer100k: 11.24 },
+            'Calgary': { totalBookings: 63, population: 1306784, density: 1329, bookingsPer100k: 4.82 },
+            'Vancouver': { totalBookings: 2, population: 662248, density: 5493, bookingsPer100k: 0.30 }
+        };
+        
+        // City colors
+        const cityColors = {
+            London: '#8884d8',
+            Ottawa: '#82ca9d',
+            Kitchener: '#ffc658',
+            Hamilton: '#ff8042',
+            Calgary: '#0088FE',
+            Vancouver: '#00C49F',
+            Toronto: '#FFBB28',
+            Montreal: '#FF8042',
+            newCity: '#FF5733'
+        };
+        
+        // Monthly distribution pattern
+        const monthlyDistribution = {
+            1: 0.0604, 2: 0.1546, 3: 0.1570, 4: 0.1691, 5: 0.2126, 6: 0.2464
+        };
+        
+        // Ratio scenarios
+        const ratioScenarios = {
+            allCities: 13.43,
+            excludingLondon: 5.57,
+            excludingLondonCalgary: 5.76,
+            includingCalgaryExcludingLondon: 5.57
+        };
+        
+        // Selected model - always excluding London
+        const selectedModel = 'excludingLondon';
+        
+        // Format population with commas
+        function formatPopulation(pop) {
+            if (!pop) return '';
+            return pop.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        // Element references
+        const cityNameInput = document.getElementById('city-name');
+        const populationInput = document.getElementById('population');
+        const densityInput = document.getElementById('density');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const resultsContainer = document.getElementById('results-container');
+        
+        // Results elements
+        const cityNameResult = document.getElementById('city-name-result');
+        const populationResult = document.getElementById('population-result');
+        const densityResult = document.getElementById('density-result');
+        const totalProjected = document.getElementById('total-projected');
+        const avgMonthly = document.getElementById('avg-monthly');
+        const bookingsPer100k = document.getElementById('bookings-per-100k');
+        const monthlyTableBody = document.getElementById('monthly-table-body');
+        const cityNameDisplays = document.querySelectorAll('.city-name-display');
+        
+        // Calculate projections
+        function calculateProjections() {
+            const cityName = cityNameInput.value;
+            const population = parseInt(populationInput.value);
+            const density = parseInt(densityInput.value);
+            
+            if (!cityName || isNaN(population) || isNaN(density)) {
+                alert('Please enter city name, population, and density');
+                return;
+            }
+            
+            // Calculate projections based on the selected model
+            const ratePerHundredThousand = ratioScenarios[selectedModel];
+            const totalProjected = Math.round((population / 100000) * ratePerHundredThousand);
+            
+            // Calculate monthly projections
+            const monthlyValues = {};
+            Object.entries(monthlyDistribution).forEach(([month, ratio]) => {
+                monthlyValues[month] = Math.round(totalProjected * ratio);
+            });
+            
+            // Update the results
+            cityNameResult.textContent = cityName;
+            populationResult.textContent = formatPopulation(population);
+            densityResult.textContent = density;
+            totalProjected.textContent = totalProjected;
+            avgMonthly.textContent = Math.round(totalProjected / 6);
+            bookingsPer100k.textContent = ratePerHundredThousand.toFixed(2);
+            
+            // Update city name displays
+            cityNameDisplays.forEach(el => {
+                el.textContent = cityName;
+            });
+            
+            // Generate table rows
+            let tableHTML = '';
+            let totalMonthlyBookings = 0;
+            
+            Object.entries(monthlyValues).forEach(([month, value]) => {
+                tableHTML += `
+                    <tr>
+                        <td>Month ${month}</td>
+                        <td style="text-align: right;">${value}</td>
+                    </tr>
+                `;
+                totalMonthlyBookings += value;
+            });
+            
+            // Add total row
+            tableHTML += `
+                <tr class="highlight">
+                    <td><strong>Total</strong></td>
+                    <td style="text-align: right;"><strong>${totalMonthlyBookings}</strong></td>
+                </tr>
+            `;
+            
+            monthlyTableBody.innerHTML = tableHTML;
+            
+            // Show results
+            resultsContainer.style.display = 'block';
+            
+            // Create charts using Recharts
+            renderCharts(cityName, population, density, monthlyValues, totalProjected);
+        }
+        
+        // Render charts using Recharts
+        function renderCharts(cityName, population, density, monthlyValues, totalProjected) {
+            const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Label } = Recharts;
+            
+            // Prepare comparison with existing cities
+            const projectionBarData = [
+                {
+                    city: cityName,
+                    bookings: totalProjected,
+                    population: population / 10000, // Convert to 10k units for readability
+                    density: density
+                },
+                {
+                    city: 'Vancouver',
+                    bookings: Math.round((662248 / 100000) * ratioScenarios[selectedModel]),
+                    population: 662248 / 10000,
+                    density: 5493
+                },
+                {
+                    city: 'Toronto',
+                    bookings: Math.round((2794356 / 100000) * ratioScenarios[selectedModel]),
+                    population: 2794356 / 10000,
+                    density: 4334
+                },
+                {
+                    city: 'Montreal',
+                    bookings: Math.round((1900000 / 100000) * ratioScenarios[selectedModel]),
+                    population: 1900000 / 10000,
+                    density: 4823
+                }
+            ];
+            
+            // Monthly projection line chart data
+            const monthlyLineData = Object.entries(monthlyValues).map(([month, value]) => {
+                const data = {
+                    month: `Month ${month}`,
+                };
+                data[cityName] = value;
+                data['Vancouver'] = Math.round((662248 / 100000) * ratioScenarios[selectedModel] * monthlyDistribution[parseInt(month)]);
+                data['Toronto'] = Math.round((2794356 / 100000) * ratioScenarios[selectedModel] * monthlyDistribution[parseInt(month)]);
+                data['Montreal'] = Math.round((1900000 / 100000) * ratioScenarios[selectedModel] * monthlyDistribution[parseInt(month)]);
+                return data;
+            });
+            
+            // Create historical cities data for comparison
+            const historicalCitiesData = Object.entries(monthlyValues).map(([month, value]) => {
+                const monthData = {
+                    month: `Month ${month}`,
+                };
+                monthData[cityName] = value;
+                
+                // Add historical data for each city
+                Object.entries(bookingRatios).forEach(([city, data]) => {
+                    if (['London', 'Ottawa', 'Kitchener', 'Hamilton'].includes(city)) {
+                        monthData[city] = Math.round(data.totalBookings * monthlyDistribution[parseInt(month)]);
+                    }
+                });
+                
+                return monthData;
+            });
+            
+            // City comparison chart
+            ReactDOM.render(
+                React.createElement(ResponsiveContainer, { width: '100%', height: '100%' },
+                    React.createElement(BarChart, {
+                        data: projectionBarData,
+                        margin: { top: 5, right: 30, left: 20, bottom: 30 }
+                    },
+                        React.createElement(CartesianGrid, { strokeDasharray: '3 3' }),
+                        React.createElement(XAxis, { dataKey: 'city' }),
+                        React.createElement(YAxis, null,
+                            React.createElement(Label, { value: 'Projected Bookings (6 months)', angle: -90, position: 'insideLeft' })
+                        ),
+                        React.createElement(Tooltip),
+                        React.createElement(Bar, { dataKey: 'bookings', fill: '#8884d8' })
+                    )
+                ),
+                document.getElementById('cities-chart')
+            );
+            
+            // Monthly projections chart
+            ReactDOM.render(
+                React.createElement(ResponsiveContainer, { width: '100%', height: '100%' },
+                    React.createElement(LineChart, { data: monthlyLineData },
+                        React.createElement(CartesianGrid, { strokeDasharray: '3 3' }),
+                        React.createElement(XAxis, { dataKey: 'month' }),
+                        React.createElement(YAxis),
+                        React.createElement(Tooltip),
+                        React.createElement(Legend),
+                        React.createElement(Line, { type: 'monotone', dataKey: cityName, stroke: cityColors.newCity, strokeWidth: 2 }),
+                        React.createElement(Line, { type: 'monotone', dataKey: 'Vancouver', stroke: cityColors.Vancouver }),
+                        React.createElement(Line, { type: 'monotone', dataKey: 'Toronto', stroke: cityColors.Toronto }),
+                        React.createElement(Line, { type: 'monotone', dataKey: 'Montreal', stroke: cityColors.Montreal })
+                    )
+                ),
+                document.getElementById('monthly-chart')
+            );
+            
+            // Historical comparison chart
+            ReactDOM.render(
+                React.createElement(ResponsiveContainer, { width: '100%', height: '100%' },
+                    React.createElement(LineChart, { data: historicalCitiesData },
+                        React.createElement(CartesianGrid, { strokeDasharray: '3 3' }),
+                        React.createElement(XAxis, { dataKey: 'month' }),
+                        React.createElement(YAxis),
+                        React.createElement(Tooltip),
+                        React.createElement(Legend),
+                        React.createElement(Line, { type: 'monotone', dataKey: cityName, stroke: '#FF5733', strokeWidth: 2 }),
+                        React.createElement(Line, { type: 'monotone', dataKey: 'London', stroke: '#8884d8' }),
+                        React.createElement(Line, { type: 'monotone', dataKey: 'Ottawa', stroke: '#82ca9d' }),
+                        React.createElement(Line, { type: 'monotone', dataKey: 'Kitchener', stroke: '#ffc658' }),
+                        React.createElement(Line, { type: 'monotone', dataKey: 'Hamilton', stroke: '#ff8042' })
+                    )
+                ),
+                document.getElementById('historical-chart')
+            );
+        }
+        
+        // Clear form
+        function clearForm() {
+            cityNameInput.value = '';
+            populationInput.value = '';
+            densityInput.value = '';
+            resultsContainer.style.display = 'none';
+        }
+        
+        // Event listeners
+        calculateBtn.addEventListener('click', calculateProjections);
+        clearBtn.addEventListener('click', clearForm);
+        
+        // Allow only numbers in population and density inputs
+        populationInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+        
+        densityInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+        });
+    </script>
+</body>
+</html> 
