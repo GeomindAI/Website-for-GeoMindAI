@@ -3,7 +3,8 @@ import {
   Box, Container, Grid, Paper, Typography, 
   AppBar, Toolbar, MenuItem,
   FormControl, InputLabel, Select,
-  CircularProgress, TextField
+  CircularProgress, TextField,
+  Table, TableHead, TableRow, TableCell, TableBody, TableContainer
 } from '@mui/material';
 import {
   BarChart, LineChart, PieChart, ComposedChart,
@@ -1127,6 +1128,24 @@ const Dashboard = () => {
     }
   }, [appointments]);
 
+  // Add state for total revenue across all cities
+  const [totalRevenueAllCities, setTotalRevenueAllCities] = useState(0);
+
+  // Update the useEffect that calculates totalOrdersAllCities to also calculate total revenue
+  useEffect(() => {
+    if (appointments && appointments.length > 0) {
+      setTotalOrdersAllCities(appointments.length);
+      
+      // Calculate total revenue across all cities
+      const totalRevenue = appointments.reduce((sum, appointment) => {
+        const revenue = parseFloat(appointment.invoiceTotal || 0);
+        return sum + (isNaN(revenue) ? 0 : revenue);
+      }, 0);
+      
+      setTotalRevenueAllCities(totalRevenue);
+    }
+  }, [appointments]);
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -1239,11 +1258,14 @@ const Dashboard = () => {
   // Modify the statistics card section to show percentages
   const renderStatisticsCard = (title, value, secondaryValue = null, icon = null) => {
     // Calculate percentage of total if this is the total orders card
-    const showPercentage = title.toLowerCase().includes('order') && totalOrdersAllCities > 0 && selectedCity !== 'all';
+    const showPercentage = title === 'Total Orders' && totalOrdersAllCities > 0 && selectedCity !== 'all';
     const percentage = showPercentage ? (value / totalOrdersAllCities * 100).toFixed(1) : null;
-    
+
+    const showRevenuePercentage = title === 'Total Revenue' && totalRevenueAllCities > 0 && selectedCity !== 'all';
+    const revenuePercentage = showRevenuePercentage ? (value / totalRevenueAllCities * 100).toFixed(1) : null;
+
     return (
-      <Paper
+      <Paper 
         elevation={1}
         sx={{
           p: 3,
@@ -1299,12 +1321,13 @@ const Dashboard = () => {
               lineHeight: 1.2
             }}
           >
-            {typeof value === 'number' ? 
-              value.toLocaleString(undefined, {
-                minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-                maximumFractionDigits: 2
-              }) : 
-              value}
+            {typeof value === 'number' && title === 'Total Revenue'
+              ? `$${value.toLocaleString(undefined, {
+                  minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+                  maximumFractionDigits: 2
+                })}`
+              : (typeof value === 'number' ? value.toLocaleString() : value)
+            }
           </Typography>
           
           {showPercentage && (
@@ -1324,6 +1347,26 @@ const Dashboard = () => {
               }}
             >
               {percentage}% of total
+            </Typography>
+          )}
+          
+          {showRevenuePercentage && (
+            <Typography
+              variant="body2"
+              component="div"
+              sx={{
+                ml: 1,
+                color: '#10B981',
+                fontWeight: 'medium',
+                fontSize: '0.875rem',
+                bgcolor: '#ECFDF5',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {revenuePercentage}% of total
             </Typography>
           )}
         </Box>
