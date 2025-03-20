@@ -935,7 +935,7 @@ const Dashboard = () => {
     
     // Filter out low-value entries (no revenue or very few orders)
     allLaundromats = allLaundromats.filter(l => 
-      l.revenue > 0 && l.orders >= 5
+      l.revenue > 0 || l.orders >= 1
     );
     
     // Sort the data
@@ -957,8 +957,8 @@ const Dashboard = () => {
           valueB = b.orders > 0 ? b.revenue / b.orders : 0;
           break;
         case 'retentionScore':
-          valueA = a.retentionRate || 0;
-          valueB = b.retentionRate || 0;
+          valueA = a.returningCustomers && a.customers ? a.returningCustomers / a.customers : 0;
+          valueB = b.returningCustomers && b.customers ? b.returningCustomers / b.customers : 0;
           break;
         default:
           valueA = a[sortColumn];
@@ -985,41 +985,43 @@ const Dashboard = () => {
       const matchesSelectedCity = selectedCity !== 'all' && 
         (laundromat.city === CITY_MAPPING[selectedCity] || laundromat.cityId === selectedCity);
       
+      // Calculate retention rate properly
+      const customers = laundromat.customers || laundromat.customerCount || 0;
+      const returningCustomers = laundromat.returningCustomers || laundromat.returningCustomerCount || 0;
+      const retentionRate = customers > 0 ? returningCustomers / customers : 0;
+      
       return (
         <tr 
           key={laundromat.id} 
           style={{ 
             borderBottom: '1px solid #E5E7EB',
-            backgroundColor: matchesSelectedCity ? '#FEFCE8' : 'inherit',
           }}
         >
           <td style={{ padding: '12px 16px' }}>
-            {laundromatIdToNameMap[laundromat.id] || laundromat.id}
             {matchesSelectedCity && (
-              <span style={{ 
-                display: 'inline-block', 
-                marginLeft: '6px', 
-                padding: '2px 6px',
-                fontSize: '0.75rem',
-                fontWeight: 500,
-                backgroundColor: '#FEF08A',
-                color: '#854D0E',
-                borderRadius: '4px'
+              <Icon sx={{ 
+                color: '#EAB308', 
+                verticalAlign: 'middle',
+                marginRight: '6px',
+                fontSize: '1.2rem'
               }}>
-                Selected City
-              </span>
+                star
+              </Icon>
             )}
+            {laundromatIdToNameMap[laundromat.id] || laundromat.id}
           </td>
           <td style={{ padding: '12px 16px' }}>
             {laundromat.city || CITY_MAPPING[laundromat.cityId] || 'Unknown'}
           </td>
-          <td style={{ padding: '12px 16px' }}>{laundromat.orders}</td>
-          <td style={{ padding: '12px 16px' }}>${laundromat.revenue.toFixed(2)}</td>
+          <td style={{ padding: '12px 16px' }}>{laundromat.orders.toLocaleString()}</td>
+          <td style={{ padding: '12px 16px' }}>${laundromat.revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
           <td style={{ padding: '12px 16px' }}>
-            ${laundromat.orders > 0 ? (laundromat.revenue / laundromat.orders).toFixed(2) : '0.00'}
+            ${laundromat.orders > 0 ? 
+              (laundromat.revenue / laundromat.orders).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 
+              '0.00'}
           </td>
-          <td style={{ padding: '12px 16px' }}>{laundromat.customers || laundromat.customerCount || 0}</td>
-          <td style={{ padding: '12px 16px' }}>{laundromat.returningCustomers || laundromat.returningCustomerCount || 0}</td>
+          <td style={{ padding: '12px 16px' }}>{customers.toLocaleString()}</td>
+          <td style={{ padding: '12px 16px' }}>{returningCustomers.toLocaleString()}</td>
           <td style={{ padding: '12px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ 
@@ -1027,13 +1029,13 @@ const Dashboard = () => {
                 height: '12px', 
                 borderRadius: '50%', 
                 marginRight: '8px',
-                backgroundColor: laundromat.retentionRate >= 0.6 ? '#10B981' :
-                              laundromat.retentionRate >= 0.45 ? '#059669' :
-                              laundromat.retentionRate >= 0.35 ? '#F59E0B' :
-                              laundromat.retentionRate >= 0.25 ? '#D97706' :
-                              laundromat.retentionRate >= 0.15 ? '#DC2626' : '#B91C1C'
+                backgroundColor: retentionRate >= 0.6 ? '#10B981' :
+                              retentionRate >= 0.45 ? '#059669' :
+                              retentionRate >= 0.35 ? '#F59E0B' :
+                              retentionRate >= 0.25 ? '#D97706' :
+                              retentionRate >= 0.15 ? '#DC2626' : '#B91C1C'
               }}></span>
-              {(laundromat.retentionRate * 100).toFixed(1)}%
+              {(retentionRate * 100).toFixed(1)}%
             </div>
           </td>
           <td style={{ padding: '12px 16px' }}>
@@ -1451,10 +1453,10 @@ const Dashboard = () => {
               </Typography>
               
               {/* Filter Controls with clear labels */}
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
                 {/* City Selector with Label */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 150 }}>
-                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.3 }}>
                     City
                   </Typography>
                   <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
@@ -1464,11 +1466,12 @@ const Dashboard = () => {
                       displayEmpty
                       sx={{ 
                         color: '#1E3A8A',
-                        '.MuiSelect-select': { py: 1.5, pr: 8 },
-                        '&:focus': { backgroundColor: 'white' }
+                        '.MuiSelect-select': { py: 1, pr: 6 },
+                        '&:focus': { backgroundColor: 'white' },
+                        fontSize: '0.85rem'
                       }}
                       IconComponent={() => (
-                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        <Icon sx={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A', fontSize: '1.25rem' }}>
                           expand_more
                         </Icon>
                       )}
@@ -1484,8 +1487,8 @@ const Dashboard = () => {
                 </Box>
                 
                 {/* Date Range Selector - From With Label */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 120 }}>
-                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 100 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.3 }}>
                     From
                   </Typography>
                   <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
@@ -1495,11 +1498,12 @@ const Dashboard = () => {
                       displayEmpty
                       sx={{ 
                         color: '#1E3A8A',
-                        '.MuiSelect-select': { py: 1.5, pr: 8 },
-                        '&:focus': { backgroundColor: 'white' }
+                        '.MuiSelect-select': { py: 1, pr: 6 },
+                        '&:focus': { backgroundColor: 'white' },
+                        fontSize: '0.85rem'
                       }}
                       IconComponent={() => (
-                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        <Icon sx={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A', fontSize: '1.25rem' }}>
                           expand_more
                         </Icon>
                       )}
@@ -1517,8 +1521,8 @@ const Dashboard = () => {
                 </Box>
                 
                 {/* Date Range Selector - To With Label */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 120 }}>
-                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 100 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.3 }}>
                     To
                   </Typography>
                   <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
@@ -1528,11 +1532,12 @@ const Dashboard = () => {
                       displayEmpty
                       sx={{ 
                         color: '#1E3A8A',
-                        '.MuiSelect-select': { py: 1.5, pr: 8 },
-                        '&:focus': { backgroundColor: 'white' }
+                        '.MuiSelect-select': { py: 1, pr: 6 },
+                        '&:focus': { backgroundColor: 'white' },
+                        fontSize: '0.85rem'
                       }}
                       IconComponent={() => (
-                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        <Icon sx={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A', fontSize: '1.25rem' }}>
                           expand_more
                         </Icon>
                       )}
@@ -1550,8 +1555,8 @@ const Dashboard = () => {
                 </Box>
                 
                 {/* Customer Type Filter With Label */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 140 }}>
-                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 130 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.3 }}>
                     Customer Type
                   </Typography>
                   <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
@@ -1561,11 +1566,12 @@ const Dashboard = () => {
                       displayEmpty
                       sx={{ 
                         color: '#1E3A8A',
-                        '.MuiSelect-select': { py: 1.5, pr: 8 },
-                        '&:focus': { backgroundColor: 'white' }
+                        '.MuiSelect-select': { py: 1, pr: 6 },
+                        '&:focus': { backgroundColor: 'white' },
+                        fontSize: '0.85rem'
                       }}
                       IconComponent={() => (
-                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        <Icon sx={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A', fontSize: '1.25rem' }}>
                           expand_more
                         </Icon>
                       )}
@@ -2055,6 +2061,169 @@ const Dashboard = () => {
             </Box>
           </Paper>
 
+          {/* City Performance Table - showing metrics across all cities */}
+          <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 'bold', color: '#111827' }}>
+            City Performance
+          </Typography>
+          <Paper sx={{ p: 0, mb: 4, overflowX: 'auto', borderRadius: 2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
+            <Box>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#F9FAFB' }}>
+                    <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      City
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      In Operation
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      Total Orders
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      Revenue
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      Avg. Order Value
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      Customers
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      Returning
+                    </th>
+                    <th style={{ padding: '16px', textAlign: 'right', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280' }}>
+                      Retention
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(CITY_MAPPING)
+                    .filter(cityId => cityId !== 'all')
+                    .map(cityId => {
+                      // Get city data from filtered appointments
+                      const cityData = appointments
+                        .filter(a => a.cityId === cityId || normalizeCityId(a) === cityId);
+                      
+                      const totalOrders = cityData.length;
+                      const totalRevenue = cityData.reduce((sum, a) => {
+                        const revenue = parseFloat(a.invoiceTotal || 0);
+                        return sum + (isNaN(revenue) ? 0 : revenue);
+                      }, 0);
+                      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+                      
+                      // Calculate unique customers
+                      const uniqueCustomers = new Set();
+                      const customerAppointments = {};
+                      
+                      cityData.forEach(a => {
+                        if (a.customerId) {
+                          uniqueCustomers.add(a.customerId);
+                          
+                          if (!customerAppointments[a.customerId]) {
+                            customerAppointments[a.customerId] = 0;
+                          }
+                          customerAppointments[a.customerId]++;
+                        }
+                      });
+                      
+                      // Calculate returning customers
+                      const totalCustomers = uniqueCustomers.size;
+                      const returningCustomers = Object.values(customerAppointments)
+                        .filter(count => count > 1).length;
+                      
+                      // Calculate retention rate
+                      const retentionRate = totalCustomers > 0 ? 
+                        returningCustomers / totalCustomers : 0;
+                      
+                      // Is this the currently selected city?
+                      const isSelected = cityId === selectedCity;
+
+                      // Calculate years in operation
+                      let operationSince;
+                      let yearsInOperation;
+                      const currentDate = new Date();
+                      
+                      switch(cityId) {
+                        case 'LYGRRATQ7EGG2': // London
+                          operationSince = new Date('2022-01-01');
+                          break;
+                        case 'L4NE8GPX89J3A': // Ottawa
+                          operationSince = new Date('2023-03-15');
+                          break;
+                        case 'LDK6Z980JTKXY': // Kitchener-Waterloo
+                          operationSince = new Date('2023-06-01');
+                          break;
+                        case 'LXMC6DWVJ5N7W': // Hamilton
+                          operationSince = new Date('2023-09-10');
+                          break;
+                        case 'LG0VGFKQ25XED': // Calgary
+                          operationSince = new Date('2023-11-20');
+                          break;
+                        default:
+                          operationSince = new Date('2022-01-01');
+                      }
+                      
+                      const diffTime = Math.abs(currentDate - operationSince);
+                      const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+                      yearsInOperation = diffYears.toFixed(1);
+                      
+                      return (
+                        <tr key={cityId} style={{ borderBottom: '1px solid #E5E7EB' }}>
+                          <td style={{ padding: '12px 16px', fontWeight: 500 }}>
+                            {isSelected && (
+                              <Icon sx={{ 
+                                color: '#EAB308', 
+                                verticalAlign: 'middle',
+                                marginRight: '6px',
+                                fontSize: '1.2rem'
+                              }}>
+                                star
+                              </Icon>
+                            )}
+                            {CITY_MAPPING[cityId]}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            {yearsInOperation} years
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            {totalOrders.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            ${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            ${avgOrderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            {totalCustomers.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            {returningCustomers.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                              <span style={{ 
+                                width: '12px', 
+                                height: '12px', 
+                                borderRadius: '50%', 
+                                marginRight: '8px',
+                                backgroundColor: retentionRate >= 0.6 ? '#10B981' :
+                                             retentionRate >= 0.45 ? '#059669' :
+                                             retentionRate >= 0.35 ? '#F59E0B' :
+                                             retentionRate >= 0.25 ? '#D97706' :
+                                             retentionRate >= 0.15 ? '#DC2626' : '#B91C1C'
+                              }}></span>
+                              {(retentionRate * 100).toFixed(1)}%
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </Box>
+          </Paper>
+          
           {/* Map Section - replaced with Coming Soon version */}
           {renderMapSection()}
         </Container>
