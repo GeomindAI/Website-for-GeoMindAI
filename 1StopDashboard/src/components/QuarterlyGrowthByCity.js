@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Line, ComposedChart } from 'recharts';
 import { Paper, Box, Typography, Collapse, IconButton, Grid } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -285,6 +285,31 @@ const QuarterlyGrowthByCity = ({ selectedCity: propSelectedCity = 'all', cityMap
     }
   };
   
+  // Custom tooltip to show both orders and growth rate
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ 
+          backgroundColor: '#fff', 
+          padding: '10px', 
+          border: '1px solid #ccc',
+          borderRadius: '5px'
+        }}>
+          <p style={{ margin: '0 0 5px' }}><strong>{label}</strong></p>
+          <p style={{ margin: '0', color: '#2563EB' }}>
+            Orders: {payload[0].value}
+          </p>
+          {payload[1] && (
+            <p style={{ margin: '0', color: '#DC2626' }}>
+              Growth Rate: {payload[1].value}%
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+  
   if (loading) {
     return (
       <Box sx={{ width: '100%', height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -298,10 +323,21 @@ const QuarterlyGrowthByCity = ({ selectedCity: propSelectedCity = 'all', cityMap
   const historicalData = currentCityData?.data?.slice(0, projectionStartIndex);
   const projectedData = currentCityData?.data?.slice(projectionStartIndex);
   
+  // Render function
+  const cityName = getCityName(propSelectedCity);
+  const sortedData = quarterlyData[propSelectedCity] 
+    ? [...quarterlyData[propSelectedCity]].sort((a, b) => (a.year === b.year) 
+      ? a.quarter - b.quarter 
+      : a.year - b.year) 
+    : [];
+  
+  // Show only last 8 quarters to avoid cluttering
+  const visibleData = sortedData.slice(-8);
+  
   return (
     <Box sx={{ mb: 5 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 'medium', color: '#1F2937' }}>
-        Quarterly Growth of {getCityName(propSelectedCity)}
+        Quarterly Growth of {cityName}
       </Typography>
       
       {/* Metrics cards */}
@@ -373,7 +409,7 @@ const QuarterlyGrowthByCity = ({ selectedCity: propSelectedCity = 'all', cityMap
       {/* City info box */}
       <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', bgcolor: '#F9FAFB' }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 'medium' }}>
-          {getCityName(propSelectedCity)}
+          {cityName}
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
@@ -422,84 +458,82 @@ const QuarterlyGrowthByCity = ({ selectedCity: propSelectedCity = 'all', cityMap
       </Paper>
       
       {/* Quarterly orders chart */}
-      <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 'medium' }}>
-          Quarterly Orders
-        </Typography>
-        
-        <Box sx={{ height: '350px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={currentCityData?.data || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="name" tick={{ fill: '#6B7280' }} />
-              <YAxis tick={{ fill: '#6B7280' }} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#FFFFFF', 
-                  borderRadius: '0.375rem', 
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', 
-                  border: 'none' 
-                }}
-                formatter={(value, name) => [
-                  value.toLocaleString(),
-                  name === 'value' ? 'Orders' : name
-                ]}
-                labelFormatter={(label, items) => {
-                  const dataPoint = items?.[0]?.payload;
-                  return `${label}${dataPoint?.projected ? ' (Projected)' : ' (Historical)'}`;
-                }}
-              />
-              <Legend wrapperStyle={{ paddingTop: '10px' }} />
-              
-              <ReferenceLine 
-                x={currentCityData?.data?.[projectionStartIndex]?.name} 
-                stroke="#6B7280" 
-                strokeDasharray="3 3" 
-                label={{ value: "Today", position: "insideTopLeft", fill: '#6B7280' }} 
-              />
-              
-              <Bar 
-                dataKey="value" 
-                name="Orders" 
-                fill={(entry) => entry?.projected ? '#64748B' : currentCityData?.color || '#2563EB'}
-                opacity={(entry) => entry?.projected ? 0.6 : 1}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          p: 3, 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+      >
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6">
+            Quarterly Orders for {cityName}
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => setTableExpanded(!tableExpanded)}
+          >
+            {tableExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+          </IconButton>
         </Box>
         
-        {/* Projection indicator */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          mt: 2,
-          pt: 2,
-          borderTop: '1px dashed #CBD5E1',
-          color: '#64748B',
-          fontSize: '0.875rem'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Box sx={{ 
-              width: 12, 
-              height: 12, 
-              backgroundColor: currentCityData?.color || '#2563EB', 
-              borderRadius: 1,
-              mr: 1 
-            }}></Box>
-            <Typography variant="body2">Historical Data</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Box sx={{ 
-              width: 12, 
-              height: 12, 
-              backgroundColor: '#64748B', 
-              borderRadius: 1,
-              opacity: 0.6,
-              mr: 1 
-            }}></Box>
-            <Typography variant="body2">Projected Data</Typography>
-          </Box>
+        <Box sx={{ flex: 1, minHeight: 300 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={visibleData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 70,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="name" 
+                angle={-45} 
+                textAnchor="end" 
+                height={70} 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                yAxisId="left" 
+                orientation="left" 
+                stroke="#2563EB"
+                label={{ value: 'Orders', angle: -90, position: 'insideLeft' }} 
+              />
+              <YAxis 
+                yAxisId="right" 
+                orientation="right" 
+                stroke="#DC2626"
+                label={{ value: 'Growth %', angle: 90, position: 'insideRight' }} 
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              <Bar 
+                yAxisId="left" 
+                dataKey="value" 
+                name="Orders" 
+                fill="#2563EB" 
+                radius={[4, 4, 0, 0]} 
+              />
+              <Line 
+                yAxisId="right" 
+                type="monotone" 
+                dataKey="growthRate" 
+                name="Growth Rate" 
+                stroke="#DC2626" 
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <ReferenceLine y={0} yAxisId="right" stroke="#666" />
+            </ComposedChart>
+          </ResponsiveContainer>
         </Box>
       </Paper>
       

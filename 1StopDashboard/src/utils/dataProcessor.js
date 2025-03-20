@@ -284,39 +284,31 @@ export const getLaundromatStatistics = (appointments) => {
     const laundromatStats = {};
     const customerToLaundromat = {};
     
-    // First pass: collect all cleaners and their cities
+    // Process each appointment
     appointments.forEach(appointment => {
-      if (!appointment.cleaning || !appointment.cleaning.cleaner) return;
+      // Skip if no customer or cleaning data
+      if (!appointment.customerId || !appointment.cleaning) return;
       
+      const customerId = appointment.customerId;
       const cleanerId = appointment.cleaning.cleaner;
-      const cityId = appointment.cityId;
+      const appointmentDate = appointment.pickup?.serviceDate ? new Date(appointment.pickup.serviceDate) : null;
       
+      // Initialize laundromat stats if not exists
       if (!laundromatStats[cleanerId]) {
         laundromatStats[cleanerId] = {
           id: cleanerId,
-          city: CITY_MAPPING[cityId] || 'Unknown',
-          cityId: cityId,
+          name: cleanerId,
           orders: 0,
           revenue: 0,
           customers: new Set(),
           returningCustomers: new Set(),
-          retentionRate: 0,
-          avgTurnaroundDays: 0,
           turnaroundTimes: [],
           orderWeights: [],
-          avgOrderWeight: 0
+          averageOrderValue: 0
         };
       }
-    });
-    
-    // Second pass: aggregate data
-    appointments.forEach(appointment => {
-      if (!appointment.cleaning || !appointment.cleaning.cleaner || !appointment.customerId) return;
       
-      const cleanerId = appointment.cleaning.cleaner;
-      const customerId = appointment.customerId;
-      
-      // Skip if cleaner wasn't found in first pass
+      // Skip if laundromat not found (shouldn't happen, but just in case)
       if (!laundromatStats[cleanerId]) return;
       
       // Count order
@@ -326,65 +318,65 @@ export const getLaundromatStatistics = (appointments) => {
       const revenue = parseFloat(appointment.invoiceTotal || 0);
       laundromatStats[cleanerId].revenue += isNaN(revenue) ? 0 : revenue;
       
-      // Track customer
+      // Track unique customers
       laundromatStats[cleanerId].customers.add(customerId);
       
       // Track returning customers
       if (customerToLaundromat[customerId] === cleanerId) {
         laundromatStats[cleanerId].returningCustomers.add(customerId);
+      } else {
+        customerToLaundromat[customerId] = cleanerId;
       }
-      customerToLaundromat[customerId] = cleanerId;
       
-      // Calculate turnaround time
-      if (appointment.pickup && appointment.pickup.serviceDate && 
-          appointment.dropoff && appointment.dropoff.serviceDate) {
-        try {
-          const pickupDate = parseISO(appointment.pickup.serviceDate);
-          const dropoffDate = parseISO(appointment.dropoff.serviceDate);
-          const turnaroundDays = differenceInDays(dropoffDate, pickupDate);
-          
-          if (turnaroundDays >= 0 && turnaroundDays <= 14) {  // Filter out potential data errors
-            laundromatStats[cleanerId].turnaroundTimes.push(turnaroundDays);
-          }
-        } catch (error) {
-          // Silently skip turnaround calculation for invalid dates
-        }
+      // Calculate turnaround time (drop date - pickup date)
+      if (appointment.pickup?.serviceDate && appointment.drop?.serviceDate) {
+        const pickupDate = new Date(appointment.pickup.serviceDate);
+        const dropDate = new Date(appointment.drop.serviceDate);
+        const turnaroundDays = (dropDate - pickupDate) / (1000 * 60 * 60 * 24);
+        laundromatStats[cleanerId].turnaroundTimes.push(turnaroundDays);
       }
       
       // Track order weights
-      if (appointment.cleaning && appointment.cleaning.orderDetails) {
-        const weight = parseFloat(appointment.cleaning.orderDetails.washFoldWeight || 0);
-        if (!isNaN(weight) && weight > 0) {
+      if (appointment.cleaning.orderDetails && appointment.cleaning.orderDetails.washFoldWeight) {
+        const weight = parseFloat(appointment.cleaning.orderDetails.washFoldWeight);
+        if (!isNaN(weight)) {
           laundromatStats[cleanerId].orderWeights.push(weight);
         }
       }
     });
     
-    // Calculate derived metrics
+    // Calculate averages and finalize stats
     Object.keys(laundromatStats).forEach(cleanerId => {
       const stats = laundromatStats[cleanerId];
       
-      // Calculate retention rate
-      stats.retentionRate = stats.customers.size > 0 
-        ? stats.returningCustomers.size / stats.customers.size 
-        : 0;
+      // Calculate average order value
+      stats.averageOrderValue = stats.orders > 0 ? stats.revenue / stats.orders : 0;
       
       // Calculate average turnaround time
-      stats.avgTurnaroundDays = stats.turnaroundTimes.length > 0
-        ? stats.turnaroundTimes.reduce((sum, days) => sum + days, 0) / stats.turnaroundTimes.length
-        : 0;
+      const totalTurnaroundDays = stats.turnaroundTimes.reduce((sum, days) => sum + days, 0);
+      stats.averageTurnaroundDays = stats.turnaroundTimes.length > 0 ? totalTurnaroundDays / stats.turnaroundTimes.length : 0;
       
       // Calculate average order weight
-      stats.avgOrderWeight = stats.orderWeights.length > 0
-        ? stats.orderWeights.reduce((sum, weight) => sum + weight, 0) / stats.orderWeights.length
-        : 0;
+      const totalWeight = stats.orderWeights.reduce((sum, weight) => sum + weight, 0);
+      stats.averageOrderWeight = stats.orderWeights.length > 0 ? totalWeight / stats.orderWeights.length : 0;
       
       // Convert sets to counts
-      stats.customers = stats.customers.size;
-      stats.returningCustomers = stats.returningCustomers.size;
+      stats.customerCount = stats.customers.size;
+      stats.returningCustomerCount = stats.returningCustomers.size;
+      stats.retentionRate = stats.customerCount > 0 ? stats.returningCustomerCount / stats.customerCount : 0;
+      
+      // Remove sets (they can't be serialized to JSON)
+      delete stats.customers;
+      delete stats.returningCustomers;
     });
     
-    return Object.values(laundromatStats).filter(stats => stats.orders > 0);
+    // MODIFIED: Filter to only include laundromats with significant orders (at least 5 orders)
+    // Then sort by number of orders and take the top 3
+    return Object.values(laundromatStats)
+      .filter(stats => stats.orders >= 5)
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 3);
+      
   } catch (error) {
     console.error('Error calculating laundromat statistics:', error);
     return [];

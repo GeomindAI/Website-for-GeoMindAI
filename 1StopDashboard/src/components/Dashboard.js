@@ -1117,6 +1117,16 @@ const Dashboard = () => {
     });
   }, [monthlyOrdersTrend, projectionData, selectedCity]);
 
+  // Add a state for total orders across all cities
+  const [totalOrdersAllCities, setTotalOrdersAllCities] = useState(0);
+  
+  // When appointments are loaded, calculate total orders across all cities
+  useEffect(() => {
+    if (appointments && appointments.length > 0) {
+      setTotalOrdersAllCities(appointments.length);
+    }
+  }, [appointments]);
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -1226,128 +1236,240 @@ const Dashboard = () => {
     );
   };
 
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {/* Header */}
-      <AppBar position="static" sx={{ backgroundColor: '#1E40AF' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
-            Laundry Service Analytics Dashboard
+  // Modify the statistics card section to show percentages
+  const renderStatisticsCard = (title, value, secondaryValue = null, icon = null) => {
+    // Calculate percentage of total if this is the total orders card
+    const showPercentage = title.toLowerCase().includes('order') && totalOrdersAllCities > 0 && selectedCity !== 'all';
+    const percentage = showPercentage ? (value / totalOrdersAllCities * 100).toFixed(1) : null;
+    
+    return (
+      <Paper
+        elevation={1}
+        sx={{
+          p: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          borderRadius: 2,
+          backgroundColor: '#FFFFFF',
+          transition: 'transform 0.3s, box-shadow 0.3s',
+          '&:hover': {
+            transform: 'translateY(-5px)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+          <Typography
+            variant="subtitle1"
+            component="div"
+            sx={{ 
+              color: '#6B7280',
+              fontWeight: 500,
+              fontSize: '0.875rem'
+            }}
+          >
+            {title}
+          </Typography>
+          {icon && (
+            <Box
+              sx={{
+                bgcolor: '#F3F4F6',
+                borderRadius: '50%',
+                width: 40,
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#3B82F6'
+              }}
+            >
+              {icon}
+            </Box>
+          )}
+        </Box>
+        
+        <Box sx={{ mt: 1, display: 'flex', alignItems: 'baseline' }}>
+          <Typography
+            variant="h4"
+            component="div"
+            sx={{
+              fontWeight: 'bold',
+              color: '#111827',
+              lineHeight: 1.2
+            }}
+          >
+            {typeof value === 'number' ? 
+              value.toLocaleString(undefined, {
+                minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+                maximumFractionDigits: 2
+              }) : 
+              value}
           </Typography>
           
-          {/* City Selector */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <FormControl variant="filled" size="small" sx={{ minWidth: 150, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
-              <Select
-                value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
-                displayEmpty
-                sx={{ 
-                  color: '#1E3A8A',
-                  '.MuiSelect-select': { py: 1.5, pr: 8 },
-                  '&:focus': { backgroundColor: 'white' }
-                }}
-                IconComponent={() => (
-                  <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                    expand_more
-                  </Icon>
-                )}
-              >
-                <MenuItem value="all">All Cities</MenuItem>
-                <MenuItem value="LYGRRATQ7EGG2">London</MenuItem>
-                <MenuItem value="L4NE8GPX89J3A">Ottawa</MenuItem>
-                <MenuItem value="LDK6Z980JTKXY">Kitchener-Waterloo</MenuItem>
-                <MenuItem value="LXMC6DWVJ5N7W">Hamilton</MenuItem>
-                <MenuItem value="LG0VGFKQ25XED">Calgary</MenuItem>
-              </Select>
-            </FormControl>
-            
-            {/* Date Range Selector - From */}
-            <FormControl variant="filled" size="small" sx={{ minWidth: 120, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
-              <Select
-                value={`${startDate.getFullYear()}-${startDate.getMonth()+1}`}
-                onChange={handleStartDateChange}
-                displayEmpty
-                sx={{ 
-                  color: '#1E3A8A',
-                  '.MuiSelect-select': { py: 1.5, pr: 8 },
-                  '&:focus': { backgroundColor: 'white' }
-                }}
-                IconComponent={() => (
-                  <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                    expand_more
-                  </Icon>
-                )}
-              >
-                {[...Array(24)].map((_, i) => {
-                  const date = subMonths(new Date(), i);
-                  const value = `${date.getFullYear()}-${date.getMonth()+1}`;
-                  const label = format(date, 'MMM yyyy');
-                  return (
-                    <MenuItem key={`from-${value}`} value={value}>{label}</MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-            
-            {/* Date Range Selector - To */}
-            <FormControl variant="filled" size="small" sx={{ minWidth: 120, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
-              <Select
-                value={`${endDate.getFullYear()}-${endDate.getMonth()+1}`}
-                onChange={handleEndDateChange}
-                displayEmpty
-                sx={{ 
-                  color: '#1E3A8A',
-                  '.MuiSelect-select': { py: 1.5, pr: 8 },
-                  '&:focus': { backgroundColor: 'white' }
-                }}
-                IconComponent={() => (
-                  <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                    expand_more
-                  </Icon>
-                )}
-              >
-                {[...Array(24)].map((_, i) => {
-                  const date = subMonths(new Date(), i);
-                  const value = `${date.getFullYear()}-${date.getMonth()+1}`;
-                  const label = format(date, 'MMM yyyy');
-                  return (
-                    <MenuItem key={`to-${value}`} value={value}>{label}</MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-            
-            {/* Customer Type Filter */}
-            <FormControl variant="filled" size="small" sx={{ minWidth: 140, backgroundColor: 'white', borderRadius: '4px' }}>
-              <Select
-                value={customerTypeFilter}
-                onChange={(e) => setCustomerTypeFilter(e.target.value)}
-                displayEmpty
-                sx={{ 
-                  color: '#1E3A8A',
-                  '.MuiSelect-select': { py: 1.5, pr: 8 },
-                  '&:focus': { backgroundColor: 'white' }
-                }}
-                IconComponent={() => (
-                  <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                    expand_more
-                  </Icon>
-                )}
-              >
-                <MenuItem value="all">All Customer Types</MenuItem>
-                {customerTypes.map(type => (
-                  <MenuItem key={type} value={type}>{type}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        </Toolbar>
-      </AppBar>
+          {showPercentage && (
+            <Typography
+              variant="body2"
+              component="div"
+              sx={{
+                ml: 1,
+                color: '#10B981',
+                fontWeight: 'medium',
+                fontSize: '0.875rem',
+                bgcolor: '#ECFDF5',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {percentage}% of total
+            </Typography>
+          )}
+        </Box>
+        
+        {secondaryValue && (
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#6B7280',
+              mt: 1
+            }}
+          >
+            {secondaryValue}
+          </Typography>
+        )}
+      </Paper>
+    );
+  };
 
-      {/* Main content */}
-      <Box component="main" sx={{ flexGrow: 1, padding: 3, backgroundColor: '#F9FAFB' }}>
+  return (
+    <Box sx={{ 
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: '#F3F4F6', 
+      minHeight: '100vh'
+    }}>
+      <Box component="main" sx={{ flexGrow: 1, px: 3, py: 4 }}>
         <Container maxWidth="xl">
+          {/* Header */}
+          <AppBar position="static" sx={{ backgroundColor: '#1E40AF' }}>
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+                Laundry Service Analytics Dashboard
+              </Typography>
+              
+              {/* City Selector */}
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <FormControl variant="filled" size="small" sx={{ minWidth: 150, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
+                  <Select
+                    value={selectedCity}
+                    onChange={(e) => setSelectedCity(e.target.value)}
+                    displayEmpty
+                    sx={{ 
+                      color: '#1E3A8A',
+                      '.MuiSelect-select': { py: 1.5, pr: 8 },
+                      '&:focus': { backgroundColor: 'white' }
+                    }}
+                    IconComponent={() => (
+                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        expand_more
+                      </Icon>
+                    )}
+                  >
+                    <MenuItem value="all">All Cities</MenuItem>
+                    <MenuItem value="LYGRRATQ7EGG2">London</MenuItem>
+                    <MenuItem value="L4NE8GPX89J3A">Ottawa</MenuItem>
+                    <MenuItem value="LDK6Z980JTKXY">Kitchener-Waterloo</MenuItem>
+                    <MenuItem value="LXMC6DWVJ5N7W">Hamilton</MenuItem>
+                    <MenuItem value="LG0VGFKQ25XED">Calgary</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                {/* Date Range Selector - From */}
+                <FormControl variant="filled" size="small" sx={{ minWidth: 120, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
+                  <Select
+                    value={`${startDate.getFullYear()}-${startDate.getMonth()+1}`}
+                    onChange={handleStartDateChange}
+                    displayEmpty
+                    sx={{ 
+                      color: '#1E3A8A',
+                      '.MuiSelect-select': { py: 1.5, pr: 8 },
+                      '&:focus': { backgroundColor: 'white' }
+                    }}
+                    IconComponent={() => (
+                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        expand_more
+                      </Icon>
+                    )}
+                  >
+                    {[...Array(24)].map((_, i) => {
+                      const date = subMonths(new Date(), i);
+                      const value = `${date.getFullYear()}-${date.getMonth()+1}`;
+                      const label = format(date, 'MMM yyyy');
+                      return (
+                        <MenuItem key={`from-${value}`} value={value}>{label}</MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+                
+                {/* Date Range Selector - To */}
+                <FormControl variant="filled" size="small" sx={{ minWidth: 120, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
+                  <Select
+                    value={`${endDate.getFullYear()}-${endDate.getMonth()+1}`}
+                    onChange={handleEndDateChange}
+                    displayEmpty
+                    sx={{ 
+                      color: '#1E3A8A',
+                      '.MuiSelect-select': { py: 1.5, pr: 8 },
+                      '&:focus': { backgroundColor: 'white' }
+                    }}
+                    IconComponent={() => (
+                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        expand_more
+                      </Icon>
+                    )}
+                  >
+                    {[...Array(24)].map((_, i) => {
+                      const date = subMonths(new Date(), i);
+                      const value = `${date.getFullYear()}-${date.getMonth()+1}`;
+                      const label = format(date, 'MMM yyyy');
+                      return (
+                        <MenuItem key={`to-${value}`} value={value}>{label}</MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+                
+                {/* Customer Type Filter */}
+                <FormControl variant="filled" size="small" sx={{ minWidth: 140, backgroundColor: 'white', borderRadius: '4px' }}>
+                  <Select
+                    value={customerTypeFilter}
+                    onChange={(e) => setCustomerTypeFilter(e.target.value)}
+                    displayEmpty
+                    sx={{ 
+                      color: '#1E3A8A',
+                      '.MuiSelect-select': { py: 1.5, pr: 8 },
+                      '&:focus': { backgroundColor: 'white' }
+                    }}
+                    IconComponent={() => (
+                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                        expand_more
+                      </Icon>
+                    )}
+                  >
+                    <MenuItem value="all">All Customer Types</MenuItem>
+                    {customerTypes.map(type => (
+                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+            </Toolbar>
+          </AppBar>
+
           {/* City Overview Section (Independent of date range) */}
           {cityInfo && (
             <Box sx={{ mb: 6 }}>
@@ -1654,154 +1776,31 @@ const Dashboard = () => {
 
           {/* Additional Metric Charts - with improved styling */}
           <Grid container spacing={3} sx={{ mb: 5 }}>
-            <Grid item xs={12} md={6}>
-              <Paper sx={{ p: 3, height: '100%', borderRadius: 2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
+            <Grid item xs={12} md={7}>
+              <Paper sx={{ p: 2, height: '100%' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'medium', color: '#4B5563' }}>
-                    {selectedChartType === 'retention' && 'Customer Retention Over Time'}
-                    {selectedChartType === 'frequency' && 'Orders Per Customer Over Time'}
-                    {selectedChartType === 'processing' && 'Processing Time Trend (Hours)'}
-                    {selectedChartType === 'customerType' && 'Customer Type Distribution'}
-                    {selectedChartType === 'orderValue' && 'Average Order Value Over Time'}
-                  </Typography>
-                  
-                  <FormControl size="small" sx={{ minWidth: 180 }}>
-                    <Select
-                      value={selectedChartType}
-                      onChange={(e) => setSelectedChartType(e.target.value)}
-                      displayEmpty
-                      variant="outlined"
-                      sx={{ fontSize: '0.875rem' }}
-                    >
-                      <MenuItem value="retention">Customer Retention</MenuItem>
-                      <MenuItem value="frequency">Orders Per Customer</MenuItem>
-                      <MenuItem value="processing">Processing Time</MenuItem>
-                      <MenuItem value="customerType">Customer Type Split</MenuItem>
-                      <MenuItem value="orderValue">Average Order Value</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Typography variant="h6">Customer Retention Over Time</Typography>
                 </Box>
                 
                 <ResponsiveContainer width="100%" height={300}>
-                  {selectedChartType === 'retention' && (
-                    <LineChart data={retentionRateTrend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                      <XAxis dataKey="name" tick={{ fill: '#6B7280' }} interval="preserveStartEnd" />
-                      <YAxis 
-                        tick={{ fill: '#6B7280' }} 
-                        domain={[0, 1]}
-                        tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '0.375rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: 'none' }}
-                        formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Retention Rate']}
-                        labelFormatter={(label) => `${label}`}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="retentionRate" 
-                        stroke="#8B5CF6" 
-                        strokeWidth={2}
-                        name="Retention Rate"
-                        dot={{ r: 4, strokeWidth: 1, fill: "#8B5CF6" }}
-                        connectNulls={true}
-                      />
-                    </LineChart>
-                  )}
-                  
-                  {selectedChartType === 'frequency' && (
-                    <LineChart data={orderFrequencyTrend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                      <XAxis dataKey="name" tick={{ fill: '#6B7280' }} interval="preserveStartEnd" />
-                      <YAxis 
-                        tick={{ fill: '#6B7280' }} 
-                        domain={[0, 'auto']}
-                        tickFormatter={(value) => value.toFixed(1)}
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '0.375rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: 'none' }}
-                        formatter={(value) => [value.toFixed(2), 'Orders/Customer']}
-                        labelFormatter={(label, items) => items?.[0]?.payload?.fullName || label}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="ordersPerCustomer" 
-                        stroke="#F59E0B" 
-                        strokeWidth={2}
-                        name="Orders Per Customer"
-                        dot={{ r: 4, strokeWidth: 1, fill: "#F59E0B" }}
-                        connectNulls={true}
-                      />
-                    </LineChart>
-                  )}
-                  
-                  {selectedChartType === 'processing' && (
-                    <LineChart data={processingTimeTrend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                      <XAxis dataKey="name" tick={{ fill: '#6B7280' }} interval="preserveStartEnd" />
-                      <YAxis 
-                        tick={{ fill: '#6B7280' }} 
-                        domain={[0, 'auto']}
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '0.375rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: 'none' }}
-                        formatter={(value) => [`${value.toFixed(1)} hours`, 'Processing Time']}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="avgProcessingHours" 
-                        stroke="#10B981" 
-                        strokeWidth={2}
-                        name="Processing Time (Hours)"
-                        dot={{ r: 4, strokeWidth: 1, fill: "#10B981" }}
-                        connectNulls={true}
-                      />
-                    </LineChart>
-                  )}
-                  
-                  {selectedChartType === 'customerType' && (
-                    <BarChart data={customerTypeTrend} barGap={0} barCategoryGap={10}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                      <XAxis dataKey="name" tick={{ fill: '#6B7280' }} interval="preserveStartEnd" />
-                      <YAxis 
-                        tick={{ fill: '#6B7280' }} 
-                        domain={[0, 100]}
-                        tickFormatter={(value) => `${value}%`}
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '0.375rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: 'none' }}
-                        formatter={(value, name) => [`${value.toFixed(1)}%`, name]}
-                      />
-                      <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                      <Bar 
-                        dataKey="residentialPercent" 
-                        name="Residential" 
-                        fill="#3B82F6"
-                        radius={[3, 3, 0, 0]}
-                      />
-                      <Bar 
-                        dataKey="commercialPercent" 
-                        name="Commercial" 
-                        fill="#F59E0B"
-                        radius={[3, 3, 0, 0]}
-                      />
-                    </BarChart>
-                  )}
-                  
-                  {selectedChartType === 'orderValue' && (
-                    <ComposedChart data={avgOrderValueTrend}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                      <XAxis dataKey="name" tick={{ fill: '#6B7280' }} />
-                      <YAxis tick={{ fill: '#6B7280' }} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '0.375rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: 'none' }}
-                        formatter={(value) => [`$${value.toFixed(2)}`, 'Avg. Order Value']} 
-                      />
-                      <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                      <Area type="monotone" dataKey="value" fill="#8884d8" fillOpacity={0.3} stroke="#8884d8" />
-                      <Line type="monotone" dataKey="value" stroke="#8884d8" connectNulls={true} />
-                    </ComposedChart>
-                  )}
+                  <LineChart data={retentionRateTrend}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis 
+                      tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
+                      domain={[0, dataMax => Math.min(1, dataMax * 1.1)]}
+                    />
+                    <Tooltip 
+                      formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Retention Rate']} 
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="retentionRate" 
+                      stroke="#3B82F6" 
+                      activeDot={{ r: 8 }}
+                      strokeWidth={2}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
