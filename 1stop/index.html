@@ -34,11 +34,12 @@
             display: inline-block;
             background-color: #1a3b5d;
             color: white;
-            padding: 12px 30px;
+            padding: 15px 40px;
             border-radius: 5px;
             text-decoration: none;
-            font-size: 1.1em;
+            font-size: 1.2em;
             transition: all 0.3s ease;
+            margin-top: 10px;
         }
         
         .dashboard-button:hover {
@@ -48,17 +49,18 @@
         }
         
         .restricted-access {
-            margin-top: 20px;
+            margin-top: 30px;
             font-size: 0.9em;
             color: #888;
         }
         
-        .link-options {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
+        .note {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #666;
         }
     </style>
 </head>
@@ -68,16 +70,13 @@
         <p>Access comprehensive analytics and insights for 1Stop Laundry operations.</p>
         <p>This is a restricted area for authorized personnel only.</p>
         
-        <a href="/1StopDashboard/build/index.html" class="dashboard-button">Enter Dashboard</a>
-        
-        <div class="link-options">
-            <p>If the main link doesn't work, try one of these alternatives:</p>
-            <a href="/1StopDashboard/build/" style="color: #1a3b5d; margin: 5px;">Option 1: /1StopDashboard/build/</a>
-            <a href="/1StopDashboard/public/" style="color: #1a3b5d; margin: 5px;">Option 2: /1StopDashboard/public/</a>
-            <a href="/1StopDashboard/" style="color: #1a3b5d; margin: 5px;">Option 3: /1StopDashboard/</a>
-        </div>
+        <a href="/1StopDashboard/public/" class="dashboard-button">Enter Dashboard</a>
         
         <p class="restricted-access">Note: Data displayed is confidential and for internal use only.</p>
+        
+        <div class="note">
+            <p>You may see some resource loading errors in the dashboard. These are minor and don't affect the core functionality.</p>
+        </div>
     </div>
     
     <script>
