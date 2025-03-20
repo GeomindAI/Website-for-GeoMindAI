@@ -933,12 +933,17 @@ const Dashboard = () => {
     // Get laundromats for current city or all laundromats
     let filteredLaundromats = laundromatStats;
     if (selectedCity !== 'all') {
-      filteredLaundromats = laundromatStats.filter(l => l.city === CITY_MAPPING[selectedCity]);
+      filteredLaundromats = laundromatStats.filter(l => {
+        // This needs to check multiple fields because of how the data is structured
+        const matchesCity = l.city === CITY_MAPPING[selectedCity] || 
+                            l.cityId === selectedCity;
+        return matchesCity;
+      });
     }
     
     // Filter out low-value entries (no revenue or very few orders)
     filteredLaundromats = filteredLaundromats.filter(l => 
-      l.revenue > 0 && l.orders > 5
+      l.revenue > 0 && l.orders >= 5
     );
     
     // Sort the data
@@ -974,7 +979,12 @@ const Dashboard = () => {
       }
     });
     
-    return sortedLaundromats.map((laundromat) => (
+    // Limiting to show only top 3 by orders
+    const top3Laundromats = sortedLaundromats
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 3);
+    
+    return top3Laundromats.map((laundromat) => (
       <tr key={laundromat.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
         <td style={{ padding: '12px 16px' }}>
           {laundromatIdToNameMap[laundromat.id] || laundromat.id}
@@ -984,8 +994,8 @@ const Dashboard = () => {
         <td style={{ padding: '12px 16px' }}>
           ${laundromat.orders > 0 ? (laundromat.revenue / laundromat.orders).toFixed(2) : '0.00'}
         </td>
-        <td style={{ padding: '12px 16px' }}>{laundromat.customers}</td>
-        <td style={{ padding: '12px 16px' }}>{laundromat.returningCustomers}</td>
+        <td style={{ padding: '12px 16px' }}>{laundromat.customers || laundromat.customerCount || 0}</td>
+        <td style={{ padding: '12px 16px' }}>{laundromat.returningCustomers || laundromat.returningCustomerCount || 0}</td>
         <td style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{ 
@@ -1004,7 +1014,13 @@ const Dashboard = () => {
             </span>
           </div>
         </td>
-        <td style={{ padding: '12px 16px' }}>{laundromat.avgTurnaroundDays.toFixed(1)} days</td>
+        <td style={{ padding: '12px 16px' }}>{
+          laundromat.avgTurnaroundDays ? 
+            `${laundromat.avgTurnaroundDays.toFixed(1)} days` : 
+            laundromat.averageTurnaroundDays ? 
+              `${laundromat.averageTurnaroundDays.toFixed(1)} days` : 
+              'N/A'
+        }</td>
       </tr>
     ));
   };
@@ -1157,9 +1173,12 @@ const Dashboard = () => {
   // Add a section for displaying order projections with error handling
   const renderProjectionSection = () => {
     return (
-      <div style={{ marginTop: '40px', marginBottom: '40px' }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#111827' }}>
+          Quarterly Growth for {selectedCity === 'all' ? 'All Cities' : CITY_MAPPING[selectedCity]}
+        </Typography>
         <QuarterlyGrowthByCity selectedCity={selectedCity} cityMapping={CITY_MAPPING} />
-      </div>
+      </Box>
     );
   };
 
@@ -1827,29 +1846,35 @@ const Dashboard = () => {
                 
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={retentionRateTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                    <XAxis dataKey="name" tick={{ fill: '#6B7280' }} />
                     <YAxis 
                       tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
                       domain={[0, dataMax => Math.min(1, dataMax * 1.1)]}
+                      tick={{ fill: '#6B7280' }}
                     />
                     <Tooltip 
+                      contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '0.375rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', border: 'none' }}
                       formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Retention Rate']} 
                     />
                     <Line 
                       type="monotone" 
                       dataKey="retentionRate" 
                       stroke="#3B82F6" 
-                      activeDot={{ r: 8 }}
                       strokeWidth={2}
+                      dot={{ r: 4, strokeWidth: 1, fill: "#3B82F6" }}
+                      activeDot={{ r: 6 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </Paper>
             </Grid>
+            
             <Grid item xs={12} md={6}>
               <Paper sx={{ p: 3, height: '100%', borderRadius: 2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'medium', color: '#4B5563' }}>Order Weight Distribution</Typography>
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 'medium', color: '#4B5563' }}>
+                  Order Weight Distribution
+                </Typography>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={weightDistribution}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />

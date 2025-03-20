@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "b6ace40d34da8bcfdde89478f1c08412",
+    "revision": "1e73cd065c5be8a2ba776c8cf9a80c2d",
     "url": "/1StopDashboard/index.html"
   },
   {
@@ -12,8 +12,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/1StopDashboard/static/js/3.5b695df6.chunk.js"
   },
   {
-    "revision": "ce17b293fb305ab4df99",
-    "url": "/1StopDashboard/static/js/main.76ca590a.chunk.js"
+    "revision": "4f31a3da8959ef601f59",
+    "url": "/1StopDashboard/static/js/main.cf2e956c.chunk.js"
   },
   {
     "revision": "dd340db54e8b8216f63f",

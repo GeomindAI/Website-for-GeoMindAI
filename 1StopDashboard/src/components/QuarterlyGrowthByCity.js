@@ -11,6 +11,7 @@ const QuarterlyGrowthByCity = ({ selectedCity: propSelectedCity = 'all', cityMap
   
   useEffect(() => {
     generateQuarterlyData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propSelectedCity]);
 
   const getCityName = (cityId) => {
