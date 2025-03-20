@@ -1,239 +1,201 @@
 import React, { useState, useEffect } from 'react';
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { Paper, Box, Typography, Collapse, IconButton, Grid } from '@mui/material';
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Paper, Box, Typography, Collapse, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
-const QuarterlyGrowthByCity = ({ selectedCity: propSelectedCity = 'all', cityMapping = {} }) => {
-  const [loading, setLoading] = useState(true);
-  const [quarterlyData, setQuarterlyData] = useState([]);
+const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
+  const [chartData, setChartData] = useState([]);
   const [tableExpanded, setTableExpanded] = useState(false);
   
+  // Generate data on component mount and when selectedCity changes
   useEffect(() => {
-    generateQuarterlyData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [propSelectedCity]);
-
+    generateData();
+  }, [selectedCity]);
+  
   const getCityName = (cityId) => {
     if (cityId === 'all') return 'All Cities';
     return cityMapping[cityId] || cityId;
   };
-
-  // Generate quarterly data
-  const generateQuarterlyData = () => {
-    // City configuration with proper growth factors
-    const cityConfigs = {
-      all: { 
-        name: "All Cities", 
-        growthFactor: 1.15, 
-        baseValue: 300,
-        color: '#2563EB'
-      },
-      LYGRRATQ7EGG2: { // London
-        name: "London", 
-        growthFactor: 1.18, 
-        baseValue: 250,
-        color: '#2563EB'
-      },
-      L4NE8GPX89J3A: { // Ottawa
-        name: "Ottawa", 
-        growthFactor: 1.12, 
-        baseValue: 180,
-        color: '#10B981'
-      },
-      LDK6Z980JTKXY: { // Kitchener-Waterloo
-        name: "Kitchener-Waterloo", 
-        growthFactor: 1.20, 
-        baseValue: 120,
-        color: '#F59E0B'
-      },
-      LXMC6DWVJ5N7W: { // Hamilton
-        name: "Hamilton", 
-        growthFactor: 1.08, 
-        baseValue: 90,
-        color: '#EF4444'
-      },
-      LG0VGFKQ25XED: { // Calgary
-        name: "Calgary", 
-        growthFactor: 1.25, 
-        baseValue: 75,
-        color: '#8B5CF6'
-      }
+  
+  // Generate chart data
+  const generateData = () => {
+    // Base values for each city
+    const cityBaseValues = {
+      'all': 280,
+      'LYGRRATQ7EGG2': 270, // London
+      'L4NE8GPX89J3A': 185, // Ottawa
+      'LDK6Z980JTKXY': 125, // Kitchener
+      'LXMC6DWVJ5N7W':  95, // Hamilton
+      'LG0VGFKQ25XED':  80  // Calgary
     };
     
-    // Quarterly seasonality factors
-    const quarterlySeason = {
-      "1": 0.9,  // Q1 (Jan-Mar)
-      "2": 1.15, // Q2 (Apr-Jun)
-      "3": 1.2,  // Q3 (Jul-Sep)
-      "4": 1.0   // Q4 (Oct-Dec)
+    // Growth rates for each city
+    const cityGrowthRates = {
+      'all': 16,
+      'LYGRRATQ7EGG2': 18, // London
+      'L4NE8GPX89J3A': 14, // Ottawa
+      'LDK6Z980JTKXY': 22, // Kitchener
+      'LXMC6DWVJ5N7W': 12, // Hamilton
+      'LG0VGFKQ25XED': 25  // Calgary
     };
     
-    const config = cityConfigs[propSelectedCity] || cityConfigs.all;
+    // Seasonal factors
+    const seasonality = {
+      1: 0.87,  // Q1
+      2: 1.12,  // Q2
+      3: 1.18,  // Q3
+      4: 0.95   // Q4
+    };
     
-    // Generate 8 quarters of data (2 years)
+    // Get base value and growth rate for selected city
+    const baseValue = cityBaseValues[selectedCity] || cityBaseValues['all'];
+    const growthRate = cityGrowthRates[selectedCity] || cityGrowthRates['all'];
+    
+    // Generate 8 quarters of data
     const data = [];
-    let previousValue = config.baseValue;
-    
-    // Start from 8 quarters ago (2 years of data)
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
-    const currentQuarter = Math.floor(currentDate.getMonth() / 3) + 1;
+    const currentMonth = currentDate.getMonth();
+    const currentQuarter = Math.floor(currentMonth / 3) + 1;
     
+    let previousValue = null;
+    let currentValue = baseValue;
+    
+    // Create the last 8 quarters (ending with current quarter)
     for (let i = 0; i < 8; i++) {
-      let quarterOffset = i - 7; // Start 7 quarters back
-      let year = currentYear;
-      let quarter = currentQuarter + quarterOffset;
+      // Calculate quarter offset from current quarter
+      const quarterOffset = i - 7;
       
-      // Adjust year and quarter
-      while (quarter <= 0) {
-        quarter += 4;
-        year -= 1;
+      // Calculate year and quarter
+      let targetYear = currentYear;
+      let targetQuarter = currentQuarter + quarterOffset;
+      
+      // Adjust for previous years
+      while (targetQuarter <= 0) {
+        targetQuarter += 4;
+        targetYear--;
       }
-      while (quarter > 4) {
-        quarter -= 4;
-        year += 1;
+      
+      // Adjust for next years
+      while (targetQuarter > 4) {
+        targetQuarter -= 4;
+        targetYear++;
       }
       
-      // Apply quarterly growth with seasonality
-      const quarterlyGrowthFactor = Math.pow(config.growthFactor, 1/4);
-      const seasonalFactor = quarterlySeason[quarter];
-      const randomFactor = 0.95 + (Math.random() * 0.1); // 0.95-1.05 random variation
+      // Apply seasonal factors and growth
+      const quarterlyGrowthFactor = Math.pow(1 + (growthRate / 100), 0.25);
+      const seasonalFactor = seasonality[targetQuarter];
+      const randomFactor = 0.95 + Math.random() * 0.1; // Random 0.95-1.05
       
-      let currentValue;
       if (i === 0) {
-        currentValue = Math.round(config.baseValue * seasonalFactor * randomFactor);
+        currentValue = Math.round(baseValue * seasonalFactor * randomFactor);
       } else {
         currentValue = Math.round(previousValue * quarterlyGrowthFactor * seasonalFactor * randomFactor);
       }
       
-      // Calculate growth rate
-      const growthRate = i === 0 ? 0 : ((currentValue / previousValue) - 1) * 100;
+      // Calculate growth percentage
+      const growthPercentage = previousValue ? ((currentValue / previousValue - 1) * 100) : 0;
       
+      // Add to data array
       data.push({
-        name: `Q${quarter} ${year}`,
-        value: currentValue,
-        growthRate: parseFloat(growthRate.toFixed(1)),
-        year: year,
-        quarter: quarter
+        name: `Q${targetQuarter} ${targetYear}`,
+        orders: currentValue,
+        growth: parseFloat(growthPercentage.toFixed(1)),
+        quarter: targetQuarter,
+        year: targetYear
       });
       
       previousValue = currentValue;
     }
     
-    setQuarterlyData(data);
-    setLoading(false);
+    setChartData(data);
   };
-
-  // Custom tooltip to show both orders and growth rate
+  
+  // Custom tooltip to display both orders and growth
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{ 
-          backgroundColor: '#fff', 
-          padding: '10px', 
-          border: '1px solid #ccc',
-          borderRadius: '5px'
+          backgroundColor: '#fff',
+          padding: '10px',
+          border: '1px solid #e0e0e0',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          borderRadius: '4px'
         }}>
-          <p style={{ margin: '0 0 5px' }}><strong>{label}</strong></p>
-          <p style={{ margin: '0', color: '#2563EB' }}>
+          <p style={{ margin: '0 0 5px', fontWeight: 'bold' }}>{label}</p>
+          <p style={{ margin: '0', color: '#3366cc' }}>
             Orders: {payload[0].value}
           </p>
-          {payload[1] && (
-            <p style={{ margin: '0', color: '#DC2626' }}>
-              Growth Rate: {payload[1].value}%
-            </p>
-          )}
+          <p style={{ margin: '0', color: '#dc3912' }}>
+            Growth: {payload[1].value}%
+          </p>
         </div>
       );
     }
     return null;
   };
   
-  const cityName = getCityName(propSelectedCity);
-  
   return (
-    <Paper 
-      elevation={2} 
-      sx={{ 
-        p: 3, 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}
-    >
+    <Paper sx={{ p: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)', borderRadius: '8px' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h6">
-          Quarterly Orders for {cityName}
+        <Typography variant="h6" fontWeight="medium">
+          Quarterly Orders for {getCityName(selectedCity)}
         </Typography>
-        <IconButton
-          size="small"
-          onClick={() => setTableExpanded(!tableExpanded)}
-        >
+        <IconButton onClick={() => setTableExpanded(!tableExpanded)} size="small">
           {tableExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
         </IconButton>
       </Box>
       
-      <Box sx={{ flex: 1, minHeight: 300 }}>
+      <Box height={320}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
-            data={quarterlyData}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 20,
-              bottom: 70,
-            }}
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="name" 
-              angle={-45} 
-              textAnchor="end" 
-              height={70} 
-              tick={{ fontSize: 12 }}
-            />
+            <XAxis dataKey="name" />
             <YAxis 
               yAxisId="left" 
               orientation="left" 
-              stroke="#2563EB"
-              label={{ value: 'Orders', angle: -90, position: 'insideLeft' }} 
+              stroke="#3366cc"
+              label={{ value: 'Orders', angle: -90, position: 'insideLeft' }}
             />
             <YAxis 
               yAxisId="right" 
               orientation="right" 
-              stroke="#DC2626"
-              label={{ value: 'Growth %', angle: 90, position: 'insideRight' }} 
+              stroke="#dc3912"
+              domain={[-5, 40]}
+              label={{ value: 'Growth %', angle: 90, position: 'insideRight' }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Bar 
               yAxisId="left" 
-              dataKey="value" 
+              dataKey="orders" 
               name="Orders" 
-              fill="#2563EB" 
-              radius={[4, 4, 0, 0]} 
+              fill="#3366cc"
+              barSize={30}
+              radius={[4, 4, 0, 0]}
             />
             <Line 
-              yAxisId="right" 
-              type="monotone" 
-              dataKey="growthRate" 
-              name="Growth Rate" 
-              stroke="#DC2626" 
+              yAxisId="right"
+              type="monotone"
+              dataKey="growth"
+              name="Growth %"
+              stroke="#dc3912"
               strokeWidth={2}
               strokeDasharray="5 5"
-              dot={{ r: 4 }}
+              dot={{ r: 4, strokeWidth: 2 }}
               activeDot={{ r: 6 }}
             />
-            <ReferenceLine y={0} yAxisId="right" stroke="#666" />
           </ComposedChart>
         </ResponsiveContainer>
       </Box>
       
       {tableExpanded && (
         <Collapse in={tableExpanded} timeout="auto" unmountOnExit>
-          <Box sx={{ mt: 2, overflowX: 'auto' }}>
+          <Box mt={3} maxHeight={200} overflow="auto">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
@@ -243,13 +205,11 @@ const QuarterlyGrowthByCity = ({ selectedCity: propSelectedCity = 'all', cityMap
                 </tr>
               </thead>
               <tbody>
-                {quarterlyData.map((row, idx) => (
-                  <tr key={idx}>
+                {chartData.map((row, index) => (
+                  <tr key={index}>
                     <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{row.name}</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{row.value}</td>
-                    <td style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>
-                      {row.growthRate}%
-                    </td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{row.orders}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{row.growth}%</td>
                   </tr>
                 ))}
               </tbody>
