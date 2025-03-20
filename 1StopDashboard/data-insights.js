@@ -17,6 +17,25 @@ const CITY_MAPPING = {
   "LG0VGFKQ25XED": "Calgary"
 };
 
+// Helper function to get revenue from an appointment - identical to the one in dataProcessor.js
+const getAppointmentRevenue = (appointment) => {
+  // Check if invoice.total exists (newer field)
+  const invoiceTotal = appointment.invoice && appointment.invoice.total 
+    ? parseFloat(appointment.invoice.total) 
+    : 0;
+  
+  // Check if invoiceTotal exists (older field)
+  const oldInvoiceTotal = appointment.invoiceTotal 
+    ? parseFloat(appointment.invoiceTotal) 
+    : 0;
+  
+  // Use the field that has a value, or combine if both have values
+  // In case of split data, we'll use the sum
+  const revenue = invoiceTotal + oldInvoiceTotal;
+  
+  return isNaN(revenue) ? 0 : revenue;
+};
+
 // Load the data
 try {
   const dataPath = path.join(__dirname, 'appointments.json');
@@ -57,8 +76,8 @@ try {
     cityStats[cityId].orders += 1;
     
     // Add revenue
-    const revenue = parseFloat(appointment.invoiceTotal || 0);
-    cityStats[cityId].revenue += isNaN(revenue) ? 0 : revenue;
+    const revenue = getAppointmentRevenue(appointment);
+    cityStats[cityId].revenue += revenue;
     
     // Track unique customers
     if (appointment.customerId) {
@@ -133,8 +152,8 @@ try {
     
     laundromatStats[cleanerId].orders += 1;
     
-    const revenue = parseFloat(appointment.invoiceTotal || 0);
-    laundromatStats[cleanerId].revenue += isNaN(revenue) ? 0 : revenue;
+    const revenue = getAppointmentRevenue(appointment);
+    laundromatStats[cleanerId].revenue += revenue;
     
     if (appointment.customerId) {
       laundromatStats[cleanerId].customers.add(appointment.customerId);

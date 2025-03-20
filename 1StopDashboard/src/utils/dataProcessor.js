@@ -181,6 +181,25 @@ const isCurrentMonth = (dateString) => {
   }
 };
 
+// Helper function to get revenue from an appointment
+export const getAppointmentRevenue = (appointment) => {
+  // Check if invoice.total exists (newer field)
+  const invoiceTotal = appointment.invoice && appointment.invoice.total 
+    ? parseFloat(appointment.invoice.total) 
+    : 0;
+  
+  // Check if invoiceTotal exists (older field)
+  const oldInvoiceTotal = appointment.invoiceTotal 
+    ? parseFloat(appointment.invoiceTotal) 
+    : 0;
+  
+  // Use the field that has a value, or combine if both have values
+  // In case of split data, we'll use the sum
+  const revenue = invoiceTotal + oldInvoiceTotal;
+  
+  return isNaN(revenue) ? 0 : revenue;
+};
+
 // Process the raw data
 export const processAppointmentsData = (data) => {
   try {
@@ -242,9 +261,9 @@ export const getCityStatistics = (appointments) => {
       // Count order
       cityStats[cityId].orders += 1;
       
-      // Add revenue
-      const revenue = parseFloat(appointment.invoiceTotal || 0);
-      cityStats[cityId].revenue += isNaN(revenue) ? 0 : revenue;
+      // Add revenue - using the helper function to check both fields
+      const revenue = getAppointmentRevenue(appointment);
+      cityStats[cityId].revenue += revenue;
       
       // Track unique customers
       if (appointment.customerId) {
@@ -315,7 +334,7 @@ export const getLaundromatStatistics = (appointments) => {
       laundromatStats[cleanerId].orders += 1;
       
       // Add revenue
-      const revenue = parseFloat(appointment.invoiceTotal || 0);
+      const revenue = getAppointmentRevenue(appointment);
       laundromatStats[cleanerId].revenue += isNaN(revenue) ? 0 : revenue;
       
       // Track unique customers
@@ -518,7 +537,7 @@ export const getAvgOrderValueTrend = (appointments, monthsToShow = 12) => {
         if (!monthlyData[monthKey]) return;
         
         // Add to totals if there's an invoice amount
-        const revenue = parseFloat(appointment.invoiceTotal || 0);
+        const revenue = getAppointmentRevenue(appointment);
         if (!isNaN(revenue) && revenue > 0) {
           monthlyData[monthKey].orderCount += 1;
           monthlyData[monthKey].totalRevenue += revenue;
@@ -558,7 +577,7 @@ export const getGeospatialData = (appointments) => {
         city: CITY_MAPPING[appointment.cityId] || 'Unknown',
         customerType: appointment.customerType,
         status: appointment.status,
-        revenue: parseFloat(appointment.invoiceTotal || 0)
+        revenue: getAppointmentRevenue(appointment)
       }));
   } catch (error) {
     console.error('Error extracting geospatial data:', error);
@@ -830,7 +849,7 @@ export const getSeasonalTrends = (appointments) => {
         
         quarterlyData[quarter].orders++;
         
-        const revenue = parseFloat(appointment.invoiceTotal || 0);
+        const revenue = getAppointmentRevenue(appointment);
         if (!isNaN(revenue)) {
           quarterlyData[quarter].revenue += revenue;
         }
@@ -897,7 +916,7 @@ export const getLondonOrderLocations = (appointments) => {
         id: appointment.appointmentId || Math.random().toString(36).substr(2, 9),
         address: appointment.pickup.to,
         customerType: appointment.customerType || 'Unknown',
-        revenue: parseFloat(appointment.invoiceTotal || 0) || 0,
+        revenue: getAppointmentRevenue(appointment) || 0,
         date: appointment.pickup.serviceDate ? 
           format(parseISO(appointment.pickup.serviceDate), 'MM/dd/yyyy') : 'Unknown'
       }));
@@ -1112,7 +1131,7 @@ export const getOrderLocations = async (appointments) => {
       cityId, // Add cityId to marker for debugging
       orderDetails: {
         customerType: appointment.customerType || appointment.customer_type || 'Unknown',
-        revenue: parseFloat(appointment.revenue || appointment.invoiceTotal || 0),
+        revenue: getAppointmentRevenue(appointment),
         address: appointment.address || (appointment.pickup ? appointment.pickup.to : 'Unknown Address'),
         laundromatId: laundromatId,
         laundromatName: laundromatName,
