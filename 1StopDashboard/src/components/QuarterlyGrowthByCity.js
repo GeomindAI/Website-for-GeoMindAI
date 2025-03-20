@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { Paper, Box, Typography, Collapse, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -7,19 +7,15 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
   const [chartData, setChartData] = useState([]);
   const [tableExpanded, setTableExpanded] = useState(false);
-  
-  // Generate data on component mount and when selectedCity changes
-  useEffect(() => {
-    generateData();
-  }, [selectedCity]);
+  const [currentQuarterIndex, setCurrentQuarterIndex] = useState(0);
   
   const getCityName = (cityId) => {
     if (cityId === 'all') return 'All Cities';
     return cityMapping[cityId] || cityId;
   };
   
-  // Generate chart data
-  const generateData = () => {
+  // Generate chart data using useCallback to memoize the function
+  const generateData = useCallback(() => {
     // Base values for each city
     const cityBaseValues = {
       'all': 280,
@@ -52,7 +48,7 @@ const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
     const baseValue = cityBaseValues[selectedCity] || cityBaseValues['all'];
     const growthRate = cityGrowthRates[selectedCity] || cityGrowthRates['all'];
     
-    // Generate 8 quarters of data
+    // Generate quarters of data (historical + projections)
     const data = [];
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
@@ -62,8 +58,11 @@ const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
     let previousValue = null;
     let currentValue = baseValue;
     
-    // Create the last 8 quarters (ending with current quarter)
-    for (let i = 0; i < 8; i++) {
+    // Create the last 8 quarters of historical data and 4 quarters of projections
+    const totalQuarters = 12; // 8 historical + 4 projections
+    
+    // Start 8 quarters ago from the current quarter
+    for (let i = 0; i < totalQuarters; i++) {
       // Calculate quarter offset from current quarter
       const quarterOffset = i - 7;
       
@@ -88,10 +87,16 @@ const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
       const seasonalFactor = seasonality[targetQuarter];
       const randomFactor = 0.95 + Math.random() * 0.1; // Random 0.95-1.05
       
+      // For projections, increase the growth rate slightly to show optimistic trend
+      const adjustedGrowthFactor = i >= 8 
+        ? Math.pow(1 + (growthRate * 1.1 / 100), 0.25) 
+        : quarterlyGrowthFactor;
+      
       if (i === 0) {
         currentValue = Math.round(baseValue * seasonalFactor * randomFactor);
       } else {
-        currentValue = Math.round(previousValue * quarterlyGrowthFactor * seasonalFactor * randomFactor);
+        // Use regular growth for historical, adjusted growth for projections
+        currentValue = Math.round(previousValue * adjustedGrowthFactor * seasonalFactor * randomFactor);
       }
       
       // Calculate growth percentage
@@ -103,18 +108,31 @@ const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
         orders: currentValue,
         growth: parseFloat(growthPercentage.toFixed(1)),
         quarter: targetQuarter,
-        year: targetYear
+        year: targetYear,
+        isProjection: i >= 8 // Mark as projection if it's after current quarter
       });
+      
+      // Save current quarter index for the reference line
+      if (quarterOffset === 0) {
+        setCurrentQuarterIndex(i);
+      }
       
       previousValue = currentValue;
     }
     
     setChartData(data);
-  };
+  }, [selectedCity]); // Only regenerate the function when selectedCity changes
+  
+  // Generate data on component mount and when selectedCity changes
+  useEffect(() => {
+    generateData();
+  }, [generateData]); // Now we can safely add generateData as a dependency
   
   // Custom tooltip to display both orders and growth
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const isProjection = payload[0].payload.isProjection;
+      
       return (
         <div style={{ 
           backgroundColor: '#fff',
@@ -123,7 +141,9 @@ const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           borderRadius: '4px'
         }}>
-          <p style={{ margin: '0 0 5px', fontWeight: 'bold' }}>{label}</p>
+          <p style={{ margin: '0 0 5px', fontWeight: 'bold' }}>
+            {label} {isProjection && <span style={{ color: '#666', fontStyle: 'italic' }}>(Projected)</span>}
+          </p>
           <p style={{ margin: '0', color: '#3366cc' }}>
             Orders: {payload[0].value}
           </p>
@@ -169,15 +189,42 @@ const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
               label={{ value: 'Growth %', angle: 90, position: 'insideRight' }}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend />
+            <Legend 
+              payload={[
+                { value: 'Historical Orders', type: 'rect', color: '#3366cc' },
+                { value: 'Projected Orders', type: 'rect', color: '#8bb4ff' },
+                { value: 'Growth %', type: 'line', color: '#dc3912' }
+              ]}
+            />
+            
+            {/* Reference line for "Today" */}
+            <ReferenceLine
+              x={chartData[currentQuarterIndex]?.name}
+              stroke="#666"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              label={{ value: 'Today', position: 'insideTopLeft', fill: '#666', fontSize: 12 }}
+              yAxisId="left"
+            />
+            
+            {/* Render the bars with conditional styling */}
             <Bar 
               yAxisId="left" 
-              dataKey="orders" 
+              dataKey="orders"
               name="Orders" 
               fill="#3366cc"
               barSize={30}
               radius={[4, 4, 0, 0]}
-            />
+              isAnimationActive={true}
+            >
+              {chartData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.isProjection ? '#8bb4ff' : '#3366cc'} 
+                />
+              ))}
+            </Bar>
+            
             <Line 
               yAxisId="right"
               type="monotone"
@@ -202,14 +249,18 @@ const QuarterlyGrowthByCity = ({ selectedCity = 'all', cityMapping = {} }) => {
                   <th style={{ padding: '8px', borderBottom: '1px solid #ddd', textAlign: 'left' }}>Quarter</th>
                   <th style={{ padding: '8px', borderBottom: '1px solid #ddd', textAlign: 'right' }}>Orders</th>
                   <th style={{ padding: '8px', borderBottom: '1px solid #ddd', textAlign: 'right' }}>Growth %</th>
+                  <th style={{ padding: '8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Type</th>
                 </tr>
               </thead>
               <tbody>
                 {chartData.map((row, index) => (
-                  <tr key={index}>
+                  <tr key={index} style={{ backgroundColor: row.isProjection ? '#f5f9ff' : 'inherit' }}>
                     <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{row.name}</td>
                     <td style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{row.orders}</td>
                     <td style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{row.growth}%</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #eee', textAlign: 'center', color: row.isProjection ? '#666' : 'inherit', fontStyle: row.isProjection ? 'italic' : 'normal' }}>
+                      {row.isProjection ? 'Projected' : 'Historical'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

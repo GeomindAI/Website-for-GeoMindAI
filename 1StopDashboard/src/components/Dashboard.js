@@ -930,24 +930,16 @@ const Dashboard = () => {
 
   // Render laundromat table with sorting
   const renderLaundromatTable = () => {
-    // Get laundromats for current city or all laundromats
-    let filteredLaundromats = laundromatStats;
-    if (selectedCity !== 'all') {
-      filteredLaundromats = laundromatStats.filter(l => {
-        // This needs to check multiple fields because of how the data is structured
-        const matchesCity = l.city === CITY_MAPPING[selectedCity] || 
-                            l.cityId === selectedCity;
-        return matchesCity;
-      });
-    }
+    // Use all laundromats but highlight the ones from the selected city
+    let allLaundromats = laundromatStats;
     
     // Filter out low-value entries (no revenue or very few orders)
-    filteredLaundromats = filteredLaundromats.filter(l => 
+    allLaundromats = allLaundromats.filter(l => 
       l.revenue > 0 && l.orders >= 5
     );
     
     // Sort the data
-    const sortedLaundromats = [...filteredLaundromats].sort((a, b) => {
+    const sortedLaundromats = [...allLaundromats].sort((a, b) => {
       let valueA, valueB;
       
       // Handle special sorting cases
@@ -955,6 +947,10 @@ const Dashboard = () => {
         case 'name':
           valueA = laundromatIdToNameMap[a.id] || a.id;
           valueB = laundromatIdToNameMap[b.id] || b.id;
+          break;
+        case 'city':
+          valueA = a.city || '';
+          valueB = b.city || '';
           break;
         case 'avgOrderValue':
           valueA = a.orders > 0 ? a.revenue / a.orders : 0;
@@ -979,50 +975,73 @@ const Dashboard = () => {
       }
     });
     
-    // Limiting to show only top 3 by orders
-    const top3Laundromats = sortedLaundromats
+    // Show top 15 laundromats by orders to keep the table manageable
+    const topLaundromats = sortedLaundromats
       .sort((a, b) => b.orders - a.orders)
-      .slice(0, 3);
+      .slice(0, 15);
     
-    return top3Laundromats.map((laundromat) => (
-      <tr key={laundromat.id} style={{ borderBottom: '1px solid #E5E7EB' }}>
-        <td style={{ padding: '12px 16px' }}>
-          {laundromatIdToNameMap[laundromat.id] || laundromat.id}
-        </td>
-        <td style={{ padding: '12px 16px' }}>{laundromat.orders}</td>
-        <td style={{ padding: '12px 16px' }}>${laundromat.revenue.toFixed(2)}</td>
-        <td style={{ padding: '12px 16px' }}>
-          ${laundromat.orders > 0 ? (laundromat.revenue / laundromat.orders).toFixed(2) : '0.00'}
-        </td>
-        <td style={{ padding: '12px 16px' }}>{laundromat.customers || laundromat.customerCount || 0}</td>
-        <td style={{ padding: '12px 16px' }}>{laundromat.returningCustomers || laundromat.returningCustomerCount || 0}</td>
-        <td style={{ padding: '12px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ 
-              width: '12px', 
-              height: '12px', 
-              borderRadius: '50%', 
-              marginRight: '8px',
-              backgroundColor: laundromat.retentionRate >= 0.6 ? '#10B981' :
-                             laundromat.retentionRate >= 0.45 ? '#059669' :
-                             laundromat.retentionRate >= 0.35 ? '#F59E0B' :
-                             laundromat.retentionRate >= 0.25 ? '#D97706' :
-                             laundromat.retentionRate >= 0.15 ? '#DC2626' : '#B91C1C'
-            }}></span>
-            <span title="Percentage of customers who are returning customers.">
+    return topLaundromats.map((laundromat) => {
+      // Check if this laundromat belongs to the selected city
+      const matchesSelectedCity = selectedCity !== 'all' && 
+        (laundromat.city === CITY_MAPPING[selectedCity] || laundromat.cityId === selectedCity);
+      
+      return (
+        <tr 
+          key={laundromat.id} 
+          style={{ 
+            borderBottom: '1px solid #E5E7EB',
+            backgroundColor: matchesSelectedCity ? '#FEFCE8' : 'inherit',
+          }}
+        >
+          <td style={{ padding: '12px 16px' }}>
+            {laundromatIdToNameMap[laundromat.id] || laundromat.id}
+            {matchesSelectedCity && (
+              <span style={{ 
+                display: 'inline-block', 
+                marginLeft: '6px', 
+                padding: '2px 6px',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                backgroundColor: '#FEF08A',
+                color: '#854D0E',
+                borderRadius: '4px'
+              }}>
+                Selected City
+              </span>
+            )}
+          </td>
+          <td style={{ padding: '12px 16px' }}>
+            {laundromat.city || CITY_MAPPING[laundromat.cityId] || 'Unknown'}
+          </td>
+          <td style={{ padding: '12px 16px' }}>{laundromat.orders}</td>
+          <td style={{ padding: '12px 16px' }}>${laundromat.revenue.toFixed(2)}</td>
+          <td style={{ padding: '12px 16px' }}>
+            ${laundromat.orders > 0 ? (laundromat.revenue / laundromat.orders).toFixed(2) : '0.00'}
+          </td>
+          <td style={{ padding: '12px 16px' }}>{laundromat.customers || laundromat.customerCount || 0}</td>
+          <td style={{ padding: '12px 16px' }}>{laundromat.returningCustomers || laundromat.returningCustomerCount || 0}</td>
+          <td style={{ padding: '12px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ 
+                width: '12px', 
+                height: '12px', 
+                borderRadius: '50%', 
+                marginRight: '8px',
+                backgroundColor: laundromat.retentionRate >= 0.6 ? '#10B981' :
+                              laundromat.retentionRate >= 0.45 ? '#059669' :
+                              laundromat.retentionRate >= 0.35 ? '#F59E0B' :
+                              laundromat.retentionRate >= 0.25 ? '#D97706' :
+                              laundromat.retentionRate >= 0.15 ? '#DC2626' : '#B91C1C'
+              }}></span>
               {(laundromat.retentionRate * 100).toFixed(1)}%
-            </span>
-          </div>
-        </td>
-        <td style={{ padding: '12px 16px' }}>{
-          laundromat.avgTurnaroundDays ? 
-            `${laundromat.avgTurnaroundDays.toFixed(1)} days` : 
-            laundromat.averageTurnaroundDays ? 
-              `${laundromat.averageTurnaroundDays.toFixed(1)} days` : 
-              'N/A'
-        }</td>
-      </tr>
-    ));
+            </div>
+          </td>
+          <td style={{ padding: '12px 16px' }}>
+            {laundromat.avgTurnaroundDays ? laundromat.avgTurnaroundDays.toFixed(1) : '—'} days
+          </td>
+        </tr>
+      );
+    });
   };
 
   // City information data
@@ -1416,118 +1435,148 @@ const Dashboard = () => {
       <Box component="main" sx={{ flexGrow: 1, px: 3, py: 4 }}>
         <Container maxWidth="xl">
           {/* Header */}
-          <AppBar position="static" sx={{ backgroundColor: '#1E40AF' }}>
+          <AppBar 
+            position="sticky" 
+            sx={{ 
+              backgroundColor: '#1E40AF', 
+              top: 0, 
+              zIndex: 1100,
+              transition: 'transform 0.3s ease',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+          >
             <Toolbar>
               <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
                 Laundry Service Analytics Dashboard
               </Typography>
               
-              {/* City Selector */}
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <FormControl variant="filled" size="small" sx={{ minWidth: 150, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
-                  <Select
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    displayEmpty
-                    sx={{ 
-                      color: '#1E3A8A',
-                      '.MuiSelect-select': { py: 1.5, pr: 8 },
-                      '&:focus': { backgroundColor: 'white' }
-                    }}
-                    IconComponent={() => (
-                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                        expand_more
-                      </Icon>
-                    )}
-                  >
-                    <MenuItem value="all">All Cities</MenuItem>
-                    <MenuItem value="LYGRRATQ7EGG2">London</MenuItem>
-                    <MenuItem value="L4NE8GPX89J3A">Ottawa</MenuItem>
-                    <MenuItem value="LDK6Z980JTKXY">Kitchener-Waterloo</MenuItem>
-                    <MenuItem value="LXMC6DWVJ5N7W">Hamilton</MenuItem>
-                    <MenuItem value="LG0VGFKQ25XED">Calgary</MenuItem>
-                  </Select>
-                </FormControl>
+              {/* Filter Controls with clear labels */}
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                {/* City Selector with Label */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 150 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                    City
+                  </Typography>
+                  <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
+                    <Select
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      displayEmpty
+                      sx={{ 
+                        color: '#1E3A8A',
+                        '.MuiSelect-select': { py: 1.5, pr: 8 },
+                        '&:focus': { backgroundColor: 'white' }
+                      }}
+                      IconComponent={() => (
+                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                          expand_more
+                        </Icon>
+                      )}
+                    >
+                      <MenuItem value="all">All Cities</MenuItem>
+                      <MenuItem value="LYGRRATQ7EGG2">London</MenuItem>
+                      <MenuItem value="L4NE8GPX89J3A">Ottawa</MenuItem>
+                      <MenuItem value="LDK6Z980JTKXY">Kitchener-Waterloo</MenuItem>
+                      <MenuItem value="LXMC6DWVJ5N7W">Hamilton</MenuItem>
+                      <MenuItem value="LG0VGFKQ25XED">Calgary</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
                 
-                {/* Date Range Selector - From */}
-                <FormControl variant="filled" size="small" sx={{ minWidth: 120, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
-                  <Select
-                    value={`${startDate.getFullYear()}-${startDate.getMonth()+1}`}
-                    onChange={handleStartDateChange}
-                    displayEmpty
-                    sx={{ 
-                      color: '#1E3A8A',
-                      '.MuiSelect-select': { py: 1.5, pr: 8 },
-                      '&:focus': { backgroundColor: 'white' }
-                    }}
-                    IconComponent={() => (
-                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                        expand_more
-                      </Icon>
-                    )}
-                  >
-                    {[...Array(24)].map((_, i) => {
-                      const date = subMonths(new Date(), i);
-                      const value = `${date.getFullYear()}-${date.getMonth()+1}`;
-                      const label = format(date, 'MMM yyyy');
-                      return (
-                        <MenuItem key={`from-${value}`} value={value}>{label}</MenuItem>
-                      );
-                    })}
-                  </Select>
-                </FormControl>
+                {/* Date Range Selector - From With Label */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 120 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                    From
+                  </Typography>
+                  <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
+                    <Select
+                      value={`${startDate.getFullYear()}-${startDate.getMonth()+1}`}
+                      onChange={handleStartDateChange}
+                      displayEmpty
+                      sx={{ 
+                        color: '#1E3A8A',
+                        '.MuiSelect-select': { py: 1.5, pr: 8 },
+                        '&:focus': { backgroundColor: 'white' }
+                      }}
+                      IconComponent={() => (
+                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                          expand_more
+                        </Icon>
+                      )}
+                    >
+                      {[...Array(24)].map((_, i) => {
+                        const date = subMonths(new Date(), i);
+                        const value = `${date.getFullYear()}-${date.getMonth()+1}`;
+                        const label = format(date, 'MMM yyyy');
+                        return (
+                          <MenuItem key={`from-${value}`} value={value}>{label}</MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                </Box>
                 
-                {/* Date Range Selector - To */}
-                <FormControl variant="filled" size="small" sx={{ minWidth: 120, backgroundColor: 'white', borderRadius: '4px', mr: 2 }}>
-                  <Select
-                    value={`${endDate.getFullYear()}-${endDate.getMonth()+1}`}
-                    onChange={handleEndDateChange}
-                    displayEmpty
-                    sx={{ 
-                      color: '#1E3A8A',
-                      '.MuiSelect-select': { py: 1.5, pr: 8 },
-                      '&:focus': { backgroundColor: 'white' }
-                    }}
-                    IconComponent={() => (
-                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                        expand_more
-                      </Icon>
-                    )}
-                  >
-                    {[...Array(24)].map((_, i) => {
-                      const date = subMonths(new Date(), i);
-                      const value = `${date.getFullYear()}-${date.getMonth()+1}`;
-                      const label = format(date, 'MMM yyyy');
-                      return (
-                        <MenuItem key={`to-${value}`} value={value}>{label}</MenuItem>
-                      );
-                    })}
-                  </Select>
-                </FormControl>
+                {/* Date Range Selector - To With Label */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 120 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                    To
+                  </Typography>
+                  <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
+                    <Select
+                      value={`${endDate.getFullYear()}-${endDate.getMonth()+1}`}
+                      onChange={handleEndDateChange}
+                      displayEmpty
+                      sx={{ 
+                        color: '#1E3A8A',
+                        '.MuiSelect-select': { py: 1.5, pr: 8 },
+                        '&:focus': { backgroundColor: 'white' }
+                      }}
+                      IconComponent={() => (
+                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                          expand_more
+                        </Icon>
+                      )}
+                    >
+                      {[...Array(24)].map((_, i) => {
+                        const date = subMonths(new Date(), i);
+                        const value = `${date.getFullYear()}-${date.getMonth()+1}`;
+                        const label = format(date, 'MMM yyyy');
+                        return (
+                          <MenuItem key={`to-${value}`} value={value}>{label}</MenuItem>
+                        );
+                      })}
+                    </Select>
+                  </FormControl>
+                </Box>
                 
-                {/* Customer Type Filter */}
-                <FormControl variant="filled" size="small" sx={{ minWidth: 140, backgroundColor: 'white', borderRadius: '4px' }}>
-                  <Select
-                    value={customerTypeFilter}
-                    onChange={(e) => setCustomerTypeFilter(e.target.value)}
-                    displayEmpty
-                    sx={{ 
-                      color: '#1E3A8A',
-                      '.MuiSelect-select': { py: 1.5, pr: 8 },
-                      '&:focus': { backgroundColor: 'white' }
-                    }}
-                    IconComponent={() => (
-                      <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
-                        expand_more
-                      </Icon>
-                    )}
-                  >
-                    <MenuItem value="all">All Customer Types</MenuItem>
-                    {customerTypes.map(type => (
-                      <MenuItem key={type} value={type}>{type}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {/* Customer Type Filter With Label */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 140 }}>
+                  <Typography variant="caption" sx={{ color: 'white', fontWeight: 'medium', mb: 0.5 }}>
+                    Customer Type
+                  </Typography>
+                  <FormControl variant="filled" size="small" sx={{ backgroundColor: 'white', borderRadius: '4px' }}>
+                    <Select
+                      value={customerTypeFilter}
+                      onChange={(e) => setCustomerTypeFilter(e.target.value)}
+                      displayEmpty
+                      sx={{ 
+                        color: '#1E3A8A',
+                        '.MuiSelect-select': { py: 1.5, pr: 8 },
+                        '&:focus': { backgroundColor: 'white' }
+                      }}
+                      IconComponent={() => (
+                        <Icon sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#1E3A8A' }}>
+                          expand_more
+                        </Icon>
+                      )}
+                    >
+                      <MenuItem value="all">All Customer Types</MenuItem>
+                      {customerTypes.map(type => (
+                        <MenuItem key={type} value={type}>{type}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
               </Box>
             </Toolbar>
           </AppBar>
@@ -1838,7 +1887,7 @@ const Dashboard = () => {
 
           {/* Additional Metric Charts - with improved styling */}
           <Grid container spacing={3} sx={{ mb: 5 }}>
-            <Grid item xs={12} md={7}>
+            <Grid item xs={12} md={6}>
               <Paper sx={{ p: 2, height: '100%' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6">Customer Retention Over Time</Typography>
@@ -1896,6 +1945,29 @@ const Dashboard = () => {
           <Typography variant="h5" gutterBottom sx={{ mt: 6, mb: 3, fontWeight: 'bold', color: '#111827' }}>
             Laundromat Performance
           </Typography>
+          <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+            <Typography variant="body1" color="text.secondary">
+              {selectedCity !== 'all' 
+                ? `Showing all laundromats with ${CITY_MAPPING[selectedCity]} laundromats highlighted`
+                : `Showing all laundromats across cities`}
+            </Typography>
+            {selectedCity !== 'all' && (
+              <Box 
+                sx={{ 
+                  display: 'inline-block', 
+                  marginLeft: '10px', 
+                  padding: '2px 8px',
+                  backgroundColor: '#FEF08A',
+                  color: '#854D0E',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  fontWeight: 'medium'
+                }}
+              >
+                {CITY_MAPPING[selectedCity]} Highlighted
+              </Box>
+            )}
+          </Box>
           <Paper sx={{ p: 0, mb: 4, overflowX: 'auto', borderRadius: 2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
             <Box sx={{ p: 3, borderBottom: '1px solid #E5E7EB' }}>
               <Grid container spacing={2}>
@@ -1925,6 +1997,12 @@ const Dashboard = () => {
                       onClick={() => handleSort('name')}
                     >
                       Laundromat Name <SortIcon column="name" />
+                    </th>
+                    <th 
+                      style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280', cursor: 'pointer' }}
+                      onClick={() => handleSort('city')}
+                    >
+                      City <SortIcon column="city" />
                     </th>
                     <th 
                       style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280', cursor: 'pointer' }}
