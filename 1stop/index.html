@@ -56,22 +56,6 @@
             margin-bottom: 30px;
         }
         
-        .fallback-link {
-            margin-top: 20px;
-            font-size: 1em;
-            color: #4a5568;
-        }
-        
-        .fallback-link a {
-            color: #2c5282;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .fallback-link a:hover {
-            text-decoration: underline;
-        }
-        
         .restricted-access {
             margin-top: 30px;
             font-size: 0.9em;
@@ -95,16 +79,13 @@
         <p>This is a restricted area for authorized personnel only.</p>
         
         <div class="dashboard-options">
-            <a href="/1StopDashboard/public/" class="dashboard-button">Enter Full Dashboard</a>
-            <p class="fallback-link">
-                Having trouble with the main dashboard? Try our <a href="/1StopDashboard/public/fallback-dashboard.html">simplified version</a>.
-            </p>
+            <a href="/1StopDashboard/" class="dashboard-button">Enter Dashboard</a>
         </div>
         
         <p class="restricted-access">Note: Data displayed is confidential and for internal use only.</p>
         
         <div class="note">
-            <p>If you experience any issues with the main dashboard, the simplified version provides essential data without advanced visualizations.</p>
+            <p>The dashboard connects to Supabase to retrieve live data. If you have any issues, contact the administrator.</p>
         </div>
     </div>
     
