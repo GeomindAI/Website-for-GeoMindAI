@@ -34,12 +34,14 @@
             display: inline-block;
             background-color: #1a3b5d;
             color: white;
-            padding: 15px 40px;
+            padding: 12px 30px;
             border-radius: 5px;
             text-decoration: none;
-            font-size: 1.2em;
+            font-size: 1.1em;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
         }
         
         .dashboard-button:hover {
@@ -49,10 +51,13 @@
         }
         
         .dashboard-options {
-            display: flex;
-            flex-direction: column;
+            display: none;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
             align-items: center;
             gap: 15px;
+            margin-top: 30px;
             margin-bottom: 30px;
         }
         
@@ -70,27 +75,134 @@
             font-size: 0.9em;
             color: #666;
         }
+
+        /* Login Form Styles */
+        .login-form {
+            display: block;
+            max-width: 300px;
+            margin: 0 auto 20px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        
+        .error-message {
+            color: #e53e3e;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .option-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            width: 270px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .option-title {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            color: #1a3b5d;
+        }
+        
+        .option-description {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <h1>1Stop Laundry Analytics Dashboard</h1>
-        <p>Access comprehensive analytics and insights for 1Stop Laundry operations.</p>
-        <p>This is a restricted area for authorized personnel only.</p>
+        <h1>1Stop Laundry Confidential Information</h1>
+        <p>Please enter password to access analytics and projections tools.</p>
         
-        <div class="dashboard-options">
-            <a href="/1StopDashboard/" class="dashboard-button">Enter Dashboard</a>
+        <!-- Login Form -->
+        <div id="login-section" class="login-form">
+            <div class="input-group">
+                <input type="password" id="password-input" placeholder="Enter password">
+            </div>
+            <button id="login-button" class="dashboard-button">Access Dashboard</button>
+            <div id="error-message" class="error-message">Incorrect password. Please try again.</div>
         </div>
         
-        <p class="restricted-access">Note: Data displayed is confidential and for internal use only.</p>
-        
-        <div class="note">
-            <p>The dashboard connects to Supabase to retrieve live data. If you have any issues, contact the administrator.</p>
+        <!-- Dashboard Options (Hidden until authenticated) -->
+        <div id="dashboard-options" class="dashboard-options">
+            <div class="option-card">
+                <h3 class="option-title">Analytics Dashboard</h3>
+                <p class="option-description">Access comprehensive analytics and insights for 1Stop Laundry operations.</p>
+                <a href="/1StopDashboard/build/" class="dashboard-button">Enter Dashboard</a>
+            </div>
+            
+            <div class="option-card">
+                <h3 class="option-title">Projections Calculator</h3>
+                <p class="option-description">Calculate booking projections for new cities based on population data.</p>
+                <a href="/1StopDashboard/projections/" class="dashboard-button">Open Calculator</a>
+            </div>
         </div>
+        
+        <p class="restricted-access">Note: All data displayed is confidential and for internal use only.</p>
     </div>
     
     <script>
-        // You could add authentication logic here if needed
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginButton = document.getElementById('login-button');
+            const passwordInput = document.getElementById('password-input');
+            const errorMessage = document.getElementById('error-message');
+            const loginSection = document.getElementById('login-section');
+            const dashboardOptions = document.getElementById('dashboard-options');
+            
+            // Check if already logged in (using session storage)
+            if (sessionStorage.getItem('1stopAuthenticated') === 'true') {
+                loginSection.style.display = 'none';
+                dashboardOptions.style.display = 'flex';
+            }
+            
+            // Add login button click handler
+            loginButton.addEventListener('click', function() {
+                const enteredPassword = passwordInput.value;
+                
+                // Check against the correct password
+                if (enteredPassword === '1win') {
+                    // Store authentication in session storage
+                    sessionStorage.setItem('1stopAuthenticated', 'true');
+                    
+                    // Hide login, show dashboard options
+                    loginSection.style.display = 'none';
+                    dashboardOptions.style.display = 'flex';
+                    errorMessage.style.display = 'none';
+                } else {
+                    // Show error message
+                    errorMessage.style.display = 'block';
+                    passwordInput.value = '';
+                }
+            });
+            
+            // Also allow Enter key to submit
+            passwordInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    loginButton.click();
+                }
+            });
+        });
     </script>
 </body>
 </html> 
