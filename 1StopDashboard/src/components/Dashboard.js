@@ -558,8 +558,7 @@ const Dashboard = () => {
     return {
       totalOrders: filteredAppointments.length,
       totalRevenue: filteredAppointments.reduce((sum, appointment) => {
-        const revenue = parseFloat(appointment.invoiceTotal || 0);
-        return sum + (isNaN(revenue) ? 0 : revenue);
+        return sum + getAppointmentRevenue(appointment);
       }, 0),
       totalCustomers: new Set(filteredAppointments.map(a => a.customerId).filter(Boolean)).size,
       totalLaundromats: new Set(filteredAppointments
@@ -567,8 +566,7 @@ const Dashboard = () => {
         .map(a => a.cleaning.cleaner)).size,
       avgOrderValue: filteredAppointments.length > 0 ? 
         (filteredAppointments.reduce((sum, appointment) => {
-          const revenue = parseFloat(appointment.invoiceTotal || 0);
-          return sum + (isNaN(revenue) ? 0 : revenue);
+          return sum + getAppointmentRevenue(appointment);
         }, 0) / filteredAppointments.length) : 0,
       avgWeight: filteredAppointments
         .filter(a => a.cleaning && a.cleaning.orderDetails && a.cleaning.orderDetails.washFoldWeight)
@@ -1176,8 +1174,7 @@ const Dashboard = () => {
       
       // Calculate total revenue across all cities
       const totalRevenue = appointments.reduce((sum, appointment) => {
-        const revenue = parseFloat(appointment.invoiceTotal || 0);
-        return sum + (isNaN(revenue) ? 0 : revenue);
+        return sum + getAppointmentRevenue(appointment);
       }, 0);
       
       setTotalRevenueAllCities(totalRevenue);
@@ -2107,8 +2104,7 @@ const Dashboard = () => {
                       
                       const totalOrders = cityData.length;
                       const totalRevenue = cityData.reduce((sum, a) => {
-                        const revenue = parseFloat(a.invoiceTotal || 0);
-                        return sum + (isNaN(revenue) ? 0 : revenue);
+                        return sum + getAppointmentRevenue(a);
                       }, 0);
                       const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
                       
