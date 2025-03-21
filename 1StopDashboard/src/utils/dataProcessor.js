@@ -261,6 +261,7 @@ export const getCityStatistics = (appointments) => {
       // Count order
       cityStats[cityId].orders += 1;
       
+<<<<<<< HEAD
       // Add revenue
       // Check for invoiceTotal (older field)
       const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
@@ -293,6 +294,11 @@ export const getCityStatistics = (appointments) => {
       }
       
       cityStats[cityId].revenue += isNaN(revenueToAdd) ? 0 : revenueToAdd;
+=======
+      // Add revenue - using the helper function to check both fields
+      const revenue = getAppointmentRevenue(appointment);
+      cityStats[cityId].revenue += revenue;
+>>>>>>> 5cfdee4d0de35b89a9900ef9b7e34d108fb4176d
       
       // Track unique customers
       if (appointment.customerId) {
@@ -363,6 +369,7 @@ export const getLaundromatStatistics = (appointments) => {
       laundromatStats[cleanerId].orders += 1;
       
       // Add revenue
+<<<<<<< HEAD
       // Check for invoiceTotal (older field)
       const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
       
@@ -394,6 +401,10 @@ export const getLaundromatStatistics = (appointments) => {
       }
       
       laundromatStats[cleanerId].revenue += isNaN(revenueToAdd) ? 0 : revenueToAdd;
+=======
+      const revenue = getAppointmentRevenue(appointment);
+      laundromatStats[cleanerId].revenue += isNaN(revenue) ? 0 : revenue;
+>>>>>>> 5cfdee4d0de35b89a9900ef9b7e34d108fb4176d
       
       // Track unique customers
       laundromatStats[cleanerId].customers.add(customerId);
@@ -595,6 +606,7 @@ export const getAvgOrderValueTrend = (appointments, monthsToShow = 12) => {
         if (!monthlyData[monthKey]) return;
         
         // Add to totals if there's an invoice amount
+<<<<<<< HEAD
         // Check for invoiceTotal (older field)
         const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
         
@@ -626,6 +638,10 @@ export const getAvgOrderValueTrend = (appointments, monthsToShow = 12) => {
         }
         
         if (!isNaN(revenueToAdd) && revenueToAdd > 0) {
+=======
+        const revenue = getAppointmentRevenue(appointment);
+        if (!isNaN(revenue) && revenue > 0) {
+>>>>>>> 5cfdee4d0de35b89a9900ef9b7e34d108fb4176d
           monthlyData[monthKey].orderCount += 1;
           monthlyData[monthKey].totalRevenue += revenueToAdd;
         }
@@ -664,6 +680,7 @@ export const getGeospatialData = (appointments) => {
         city: CITY_MAPPING[appointment.cityId] || 'Unknown',
         customerType: appointment.customerType,
         status: appointment.status,
+<<<<<<< HEAD
         revenue: (() => {
           // Check for invoiceTotal (older field)
           const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
@@ -697,6 +714,9 @@ export const getGeospatialData = (appointments) => {
           
           return revenueToAdd;
         })()
+=======
+        revenue: getAppointmentRevenue(appointment)
+>>>>>>> 5cfdee4d0de35b89a9900ef9b7e34d108fb4176d
       }));
   } catch (error) {
     console.error('Error extracting geospatial data:', error);
@@ -968,6 +988,7 @@ export const getSeasonalTrends = (appointments) => {
         
         quarterlyData[quarter].orders++;
         
+<<<<<<< HEAD
         // Check for invoiceTotal (older field)
         const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
         
@@ -1000,6 +1021,11 @@ export const getSeasonalTrends = (appointments) => {
         
         if (!isNaN(revenueToAdd)) {
           quarterlyData[quarter].revenue += revenueToAdd;
+=======
+        const revenue = getAppointmentRevenue(appointment);
+        if (!isNaN(revenue)) {
+          quarterlyData[quarter].revenue += revenue;
+>>>>>>> 5cfdee4d0de35b89a9900ef9b7e34d108fb4176d
         }
       } catch (error) {
         // Skip if date parsing fails
@@ -1064,6 +1090,7 @@ export const getLondonOrderLocations = (appointments) => {
         id: appointment.appointmentId || Math.random().toString(36).substr(2, 9),
         address: appointment.pickup.to,
         customerType: appointment.customerType || 'Unknown',
+<<<<<<< HEAD
         revenue: (() => {
           // Check for invoiceTotal (older field)
           const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
@@ -1095,6 +1122,9 @@ export const getLondonOrderLocations = (appointments) => {
           }
           return 0;
         })(),
+=======
+        revenue: getAppointmentRevenue(appointment) || 0,
+>>>>>>> 5cfdee4d0de35b89a9900ef9b7e34d108fb4176d
         date: appointment.pickup.serviceDate ? 
           format(parseISO(appointment.pickup.serviceDate), 'MM/dd/yyyy') : 'Unknown'
       }));
@@ -1309,6 +1339,7 @@ export const getOrderLocations = async (appointments) => {
       cityId, // Add cityId to marker for debugging
       orderDetails: {
         customerType: appointment.customerType || appointment.customer_type || 'Unknown',
+<<<<<<< HEAD
         revenue: (() => {
           // Check if already has calculated revenue
           if (appointment.revenue && parseFloat(appointment.revenue) > 0) {
@@ -1345,6 +1376,9 @@ export const getOrderLocations = async (appointments) => {
           }
           return 0;
         })(),
+=======
+        revenue: getAppointmentRevenue(appointment),
+>>>>>>> 5cfdee4d0de35b89a9900ef9b7e34d108fb4176d
         address: appointment.address || (appointment.pickup ? appointment.pickup.to : 'Unknown Address'),
         laundromatId: laundromatId,
         laundromatName: laundromatName,
