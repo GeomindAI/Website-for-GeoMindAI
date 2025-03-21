@@ -202,17 +202,26 @@ export const getAppointmentRevenue = (appointment) => {
     otherRevenue += parseFloat(appointment.delivery.rate || 0);
   }
   
-  // Use appropriate revenue value to avoid double-counting
+  // Calculate total revenue correctly by adding all possible revenue sources and removing overlapping values
   let revenueToAdd = 0;
+  
+  // Add all valid revenue sources
+  if (invoiceTotal > 0) {
+    revenueToAdd += invoiceTotal;
+  }
+  
+  if (invoiceDotTotal > 0) {
+    revenueToAdd += invoiceDotTotal;
+  }
+  
+  if (otherRevenue > 0 && invoiceTotal === 0 && invoiceDotTotal === 0) {
+    revenueToAdd += otherRevenue;
+  }
+  
+  // Avoid double-counting by removing the overlapping amount
+  // If both values exist, we need to subtract the smaller one as it's the overlap
   if (invoiceTotal > 0 && invoiceDotTotal > 0) {
-    // Both fields exist, take the larger value to avoid double-counting
-    revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
-  } else if (invoiceDotTotal > 0) {
-    revenueToAdd = invoiceDotTotal;
-  } else if (invoiceTotal > 0) {
-    revenueToAdd = invoiceTotal;
-  } else if (otherRevenue > 0) {
-    revenueToAdd = otherRevenue;
+    revenueToAdd -= Math.min(invoiceTotal, invoiceDotTotal);
   }
   
   return isNaN(revenueToAdd) ? 0 : revenueToAdd;
