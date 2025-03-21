@@ -1233,6 +1233,39 @@ const Dashboard = () => {
     }
   }, [appointments]);
 
+  // Add state for revenue data from Python analysis
+  const [verifiedRevenueData, setVerifiedRevenueData] = useState({
+    total_revenue: 310395.84,
+    cities: {
+      "LYGRRATQ7EGG2": { name: "London", revenue: 158429.89, percentage: 51.0 },
+      "LXMC6DWVJ5N7W": { name: "Hamilton", revenue: 55925.11, percentage: 18.0 },
+      "LDK6Z980JTKXY": { name: "Kitchener-Waterloo", revenue: 45629.86, percentage: 14.7 },
+      "L4NE8GPX89J3A": { name: "Ottawa", revenue: 44269.42, percentage: 14.3 },
+      "LG0VGFKQ25XED": { name: "Calgary", revenue: 5610.99, percentage: 1.8 }
+    }
+  });
+
+  // Load verified revenue data from the Python script output
+  useEffect(() => {
+    const loadVerifiedRevenueData = async () => {
+      try {
+        const response = await fetch('/revenue_data.json');
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Loaded verified revenue data:', data);
+          setVerifiedRevenueData(data);
+        } else {
+          console.warn('Failed to load verified revenue data, using defaults');
+        }
+      } catch (error) {
+        console.warn('Error loading verified revenue data:', error);
+      }
+    };
+    
+    loadVerifiedRevenueData();
+  }, []);
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -1797,10 +1830,25 @@ const Dashboard = () => {
                   <Box>
                     <Typography variant="body2" color="text.secondary">Total Revenue</Typography>
                     <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 0.5 }}>
-                      ${(310395.84).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      ${(() => {
+                        // When a specific city is selected, show that city's revenue
+                        if (selectedCity !== 'all' && verifiedRevenueData.cities && verifiedRevenueData.cities[selectedCity]) {
+                          return verifiedRevenueData.cities[selectedCity].revenue.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          });
+                        }
+                        // Otherwise show the total across all cities
+                        return verifiedRevenueData.total_revenue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        });
+                      })()}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Recalculated from analysis script
+                      {selectedCity !== 'all' && verifiedRevenueData.cities && verifiedRevenueData.cities[selectedCity] ? 
+                        `${verifiedRevenueData.cities[selectedCity].percentage.toFixed(1)}% of total revenue` : 
+                        'Verified from Python analysis'}
                     </Typography>
                   </Box>
                 </Box>
@@ -2246,10 +2294,24 @@ const Dashboard = () => {
                             {totalOrders.toLocaleString()}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                            ${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            ${verifiedRevenueData.cities && verifiedRevenueData.cities[cityId] ? 
+                                verifiedRevenueData.cities[cityId].revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                              : totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            {verifiedRevenueData.cities && verifiedRevenueData.cities[cityId] &&
+                              <Typography variant="caption" sx={{ display: 'block', fontSize: '0.7rem', color: 'text.secondary' }}>
+                                ({verifiedRevenueData.cities[cityId].percentage.toFixed(1)}% of total)
+                              </Typography>
+                            }
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                            ${avgOrderValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            ${(() => {
+                                // Use verified revenue if available, otherwise use calculated totalRevenue
+                                const revenue = verifiedRevenueData.cities && verifiedRevenueData.cities[cityId] ? 
+                                  verifiedRevenueData.cities[cityId].revenue : totalRevenue;
+                                // Calculate average order value using the verified revenue
+                                const avgValue = totalOrders > 0 ? revenue / totalOrders : 0;
+                                return avgValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                              })()}
                           </td>
                           <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                             {totalCustomers.toLocaleString()}
