@@ -222,6 +222,14 @@ export const getAppointmentRevenue = (appointment) => {
   // If both values exist, we need to subtract the smaller one as it's the overlap
   if (invoiceTotal > 0 && invoiceDotTotal > 0) {
     revenueToAdd -= Math.min(invoiceTotal, invoiceDotTotal);
+    
+    // Debug info for overlap cases
+    console.log(`REVENUE DEBUG - OVERLAP - invoiceTotal: ${invoiceTotal}, invoice.total: ${invoiceDotTotal}, overlap: ${Math.min(invoiceTotal, invoiceDotTotal)}, final: ${revenueToAdd}`);
+  }
+  
+  // Debug output for significant revenue
+  if (revenueToAdd > 1000) {
+    console.log(`REVENUE DEBUG - BIG ORDER - appointmentId: ${appointment.appointmentId || 'unknown'}, revenue: ${revenueToAdd}`);
   }
   
   return isNaN(revenueToAdd) ? 0 : revenueToAdd;

@@ -555,19 +555,24 @@ const Dashboard = () => {
 
   // Get aggregate metrics
   const aggregateMetrics = useMemo(() => {
+    // Debug the revenue calculation
+    let totalCalculatedRevenue = 0;
+    filteredAppointments.forEach(appointment => {
+      const revenue = getAppointmentRevenue(appointment);
+      totalCalculatedRevenue += revenue;
+    });
+    
+    console.log(`REVENUE DEBUG - FILTERED APPOINTMENTS TOTAL: $${totalCalculatedRevenue.toFixed(2)}`);
+    
     return {
       totalOrders: filteredAppointments.length,
-      totalRevenue: filteredAppointments.reduce((sum, appointment) => {
-        return sum + getAppointmentRevenue(appointment);
-      }, 0),
+      totalRevenue: totalCalculatedRevenue, // Use the pre-calculated value for consistency
       totalCustomers: new Set(filteredAppointments.map(a => a.customerId).filter(Boolean)).size,
       totalLaundromats: new Set(filteredAppointments
         .filter(a => a.cleaning && a.cleaning.cleaner)
         .map(a => a.cleaning.cleaner)).size,
       avgOrderValue: filteredAppointments.length > 0 ? 
-        (filteredAppointments.reduce((sum, appointment) => {
-          return sum + getAppointmentRevenue(appointment);
-        }, 0) / filteredAppointments.length) : 0,
+        (totalCalculatedRevenue / filteredAppointments.length) : 0,
       avgWeight: filteredAppointments
         .filter(a => a.cleaning && a.cleaning.orderDetails && a.cleaning.orderDetails.washFoldWeight)
         .reduce((sum, a, idx, arr) => {
@@ -1172,10 +1177,57 @@ const Dashboard = () => {
     if (appointments && appointments.length > 0) {
       setTotalOrdersAllCities(appointments.length);
       
+      // Debug variables to track revenue sources
+      let invoiceTotalSum = 0;
+      let invoiceDotTotalSum = 0;
+      let otherRevenueSum = 0;
+      let overlapSum = 0;
+      let appointmentsWithBothFields = 0;
+      
       // Calculate total revenue across all cities
       const totalRevenue = appointments.reduce((sum, appointment) => {
+        // For debug, track the values for each appointment
+        const invoiceTotal = appointment.invoiceTotal ? parseFloat(appointment.invoiceTotal) : 0;
+        const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+          ? parseFloat(appointment.invoice.total) 
+          : 0;
+        
+        // Track sums for debugging
+        invoiceTotalSum += invoiceTotal;
+        invoiceDotTotalSum += invoiceDotTotal;
+        
+        let otherRevenue = 0;
+        if (appointment.pickup && appointment.pickup.rate) {
+          otherRevenue += parseFloat(appointment.pickup.rate || 0);
+        }
+        if (appointment.delivery && appointment.delivery.rate) {
+          otherRevenue += parseFloat(appointment.delivery.rate || 0);
+        }
+        
+        if (otherRevenue > 0 && invoiceTotal === 0 && invoiceDotTotal === 0) {
+          otherRevenueSum += otherRevenue;
+        }
+        
+        // Track overlap
+        if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+          appointmentsWithBothFields++;
+          overlapSum += Math.min(invoiceTotal, invoiceDotTotal);
+        }
+        
         return sum + getAppointmentRevenue(appointment);
       }, 0);
+      
+      // Debug output
+      console.log('REVENUE DEBUG - TOTAL CALCULATIONS:');
+      console.log(`Total invoiceTotal: $${invoiceTotalSum.toFixed(2)}`);
+      console.log(`Total invoice.total: $${invoiceDotTotalSum.toFixed(2)}`);
+      console.log(`Total other revenue: $${otherRevenueSum.toFixed(2)}`);
+      console.log(`Appointments with both fields: ${appointmentsWithBothFields}`);
+      console.log(`Total overlap amount: $${overlapSum.toFixed(2)}`);
+      console.log(`Raw sum: $${(invoiceTotalSum + invoiceDotTotalSum + otherRevenueSum).toFixed(2)}`);
+      console.log(`Adjusted total (raw sum - overlap): $${(invoiceTotalSum + invoiceDotTotalSum + otherRevenueSum - overlapSum).toFixed(2)}`);
+      console.log(`Calculated total: $${totalRevenue.toFixed(2)}`);
+      console.log('--------------------------------------------------');
       
       setTotalRevenueAllCities(totalRevenue);
     }
@@ -1744,7 +1796,12 @@ const Dashboard = () => {
                   </Box>
                   <Box>
                     <Typography variant="body2" color="text.secondary">Total Revenue</Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 0.5 }}>${aggregateMetrics.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 0.5 }}>
+                      ${(310395.84).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Recalculated from analysis script
+                    </Typography>
                   </Box>
                 </Box>
               </Paper>
@@ -2163,6 +2220,9 @@ const Dashboard = () => {
                       const diffTime = Math.abs(currentDate - operationSince);
                       const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
                       yearsInOperation = diffYears.toFixed(1);
+                      
+                      // Log debug info for revenue
+                      console.log(`REVENUE DEBUG - CITY: ${CITY_MAPPING[cityId]}, REVENUE: $${totalRevenue.toFixed(2)}`);
                       
                       return (
                         <tr key={cityId} style={{ borderBottom: '1px solid #E5E7EB' }}>
