@@ -183,21 +183,39 @@ const isCurrentMonth = (dateString) => {
 
 // Helper function to get revenue from an appointment
 export const getAppointmentRevenue = (appointment) => {
-  // Check if invoice.total exists (newer field)
-  const invoiceTotal = appointment.invoice && appointment.invoice.total 
-    ? parseFloat(appointment.invoice.total) 
-    : 0;
-  
-  // Check if invoiceTotal exists (older field)
-  const oldInvoiceTotal = appointment.invoiceTotal 
+  // Check for invoiceTotal (older field)
+  const invoiceTotal = appointment.invoiceTotal 
     ? parseFloat(appointment.invoiceTotal) 
     : 0;
   
-  // Use the field that has a value, or combine if both have values
-  // In case of split data, we'll use the sum
-  const revenue = invoiceTotal + oldInvoiceTotal;
+  // Check for invoice.total (newer field)
+  const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+    ? parseFloat(appointment.invoice.total) 
+    : 0;
   
-  return isNaN(revenue) ? 0 : revenue;
+  // Check for other revenue fields as fallback
+  let otherRevenue = 0;
+  if (appointment.pickup && appointment.pickup.rate) {
+    otherRevenue += parseFloat(appointment.pickup.rate || 0);
+  }
+  if (appointment.delivery && appointment.delivery.rate) {
+    otherRevenue += parseFloat(appointment.delivery.rate || 0);
+  }
+  
+  // Use appropriate revenue value to avoid double-counting
+  let revenueToAdd = 0;
+  if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+    // Both fields exist, take the larger value to avoid double-counting
+    revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
+  } else if (invoiceDotTotal > 0) {
+    revenueToAdd = invoiceDotTotal;
+  } else if (invoiceTotal > 0) {
+    revenueToAdd = invoiceTotal;
+  } else if (otherRevenue > 0) {
+    revenueToAdd = otherRevenue;
+  }
+  
+  return isNaN(revenueToAdd) ? 0 : revenueToAdd;
 };
 
 // Process the raw data
@@ -261,9 +279,38 @@ export const getCityStatistics = (appointments) => {
       // Count order
       cityStats[cityId].orders += 1;
       
-      // Add revenue - using the helper function to check both fields
-      const revenue = getAppointmentRevenue(appointment);
-      cityStats[cityId].revenue += revenue;
+      // Add revenue
+      // Check for invoiceTotal (older field)
+      const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
+      
+      // Check for invoice.total (newer field)
+      const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+        ? parseFloat(appointment.invoice.total) 
+        : 0;
+      
+      // Check for other revenue fields as fallback
+      let otherRevenue = 0;
+      if (appointment.pickup && appointment.pickup.rate) {
+        otherRevenue += parseFloat(appointment.pickup.rate || 0);
+      }
+      if (appointment.delivery && appointment.delivery.rate) {
+        otherRevenue += parseFloat(appointment.delivery.rate || 0);
+      }
+      
+      // Use appropriate revenue value to avoid double-counting
+      let revenueToAdd = 0;
+      if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+        // Both fields exist, take the larger value to avoid double-counting
+        revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
+      } else if (invoiceDotTotal > 0) {
+        revenueToAdd = invoiceDotTotal;
+      } else if (invoiceTotal > 0) {
+        revenueToAdd = invoiceTotal;
+      } else if (otherRevenue > 0) {
+        revenueToAdd = otherRevenue;
+      }
+      
+      cityStats[cityId].revenue += isNaN(revenueToAdd) ? 0 : revenueToAdd;
       
       // Track unique customers
       if (appointment.customerId) {
@@ -334,8 +381,37 @@ export const getLaundromatStatistics = (appointments) => {
       laundromatStats[cleanerId].orders += 1;
       
       // Add revenue
-      const revenue = getAppointmentRevenue(appointment);
-      laundromatStats[cleanerId].revenue += isNaN(revenue) ? 0 : revenue;
+      // Check for invoiceTotal (older field)
+      const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
+      
+      // Check for invoice.total (newer field)
+      const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+        ? parseFloat(appointment.invoice.total) 
+        : 0;
+      
+      // Check for other revenue fields as fallback
+      let otherRevenue = 0;
+      if (appointment.pickup && appointment.pickup.rate) {
+        otherRevenue += parseFloat(appointment.pickup.rate || 0);
+      }
+      if (appointment.delivery && appointment.delivery.rate) {
+        otherRevenue += parseFloat(appointment.delivery.rate || 0);
+      }
+      
+      // Use appropriate revenue value to avoid double-counting
+      let revenueToAdd = 0;
+      if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+        // Both fields exist, take the larger value to avoid double-counting
+        revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
+      } else if (invoiceDotTotal > 0) {
+        revenueToAdd = invoiceDotTotal;
+      } else if (invoiceTotal > 0) {
+        revenueToAdd = invoiceTotal;
+      } else if (otherRevenue > 0) {
+        revenueToAdd = otherRevenue;
+      }
+      
+      laundromatStats[cleanerId].revenue += isNaN(revenueToAdd) ? 0 : revenueToAdd;
       
       // Track unique customers
       laundromatStats[cleanerId].customers.add(customerId);
@@ -537,10 +613,39 @@ export const getAvgOrderValueTrend = (appointments, monthsToShow = 12) => {
         if (!monthlyData[monthKey]) return;
         
         // Add to totals if there's an invoice amount
-        const revenue = getAppointmentRevenue(appointment);
-        if (!isNaN(revenue) && revenue > 0) {
+        // Check for invoiceTotal (older field)
+        const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
+        
+        // Check for invoice.total (newer field)
+        const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+          ? parseFloat(appointment.invoice.total) 
+          : 0;
+        
+        // Check for other revenue fields as fallback
+        let otherRevenue = 0;
+        if (appointment.pickup && appointment.pickup.rate) {
+          otherRevenue += parseFloat(appointment.pickup.rate || 0);
+        }
+        if (appointment.delivery && appointment.delivery.rate) {
+          otherRevenue += parseFloat(appointment.delivery.rate || 0);
+        }
+        
+        // Use appropriate revenue value to avoid double-counting
+        let revenueToAdd = 0;
+        if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+          // Both fields exist, take the larger value to avoid double-counting
+          revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
+        } else if (invoiceDotTotal > 0) {
+          revenueToAdd = invoiceDotTotal;
+        } else if (invoiceTotal > 0) {
+          revenueToAdd = invoiceTotal;
+        } else if (otherRevenue > 0) {
+          revenueToAdd = otherRevenue;
+        }
+        
+        if (!isNaN(revenueToAdd) && revenueToAdd > 0) {
           monthlyData[monthKey].orderCount += 1;
-          monthlyData[monthKey].totalRevenue += revenue;
+          monthlyData[monthKey].totalRevenue += revenueToAdd;
         }
       } catch (error) {
         // Skip this appointment if date parsing fails
@@ -577,7 +682,39 @@ export const getGeospatialData = (appointments) => {
         city: CITY_MAPPING[appointment.cityId] || 'Unknown',
         customerType: appointment.customerType,
         status: appointment.status,
-        revenue: getAppointmentRevenue(appointment)
+        revenue: (() => {
+          // Check for invoiceTotal (older field)
+          const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
+          
+          // Check for invoice.total (newer field)
+          const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+            ? parseFloat(appointment.invoice.total) 
+            : 0;
+          
+          // Check for other revenue fields as fallback
+          let otherRevenue = 0;
+          if (appointment.pickup && appointment.pickup.rate) {
+            otherRevenue += parseFloat(appointment.pickup.rate || 0);
+          }
+          if (appointment.delivery && appointment.delivery.rate) {
+            otherRevenue += parseFloat(appointment.delivery.rate || 0);
+          }
+          
+          // Use appropriate revenue value to avoid double-counting
+          let revenueToAdd = 0;
+          if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+            // Both fields exist, take the larger value to avoid double-counting
+            revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
+          } else if (invoiceDotTotal > 0) {
+            revenueToAdd = invoiceDotTotal;
+          } else if (invoiceTotal > 0) {
+            revenueToAdd = invoiceTotal;
+          } else if (otherRevenue > 0) {
+            revenueToAdd = otherRevenue;
+          }
+          
+          return revenueToAdd;
+        })()
       }));
   } catch (error) {
     console.error('Error extracting geospatial data:', error);
@@ -849,9 +986,38 @@ export const getSeasonalTrends = (appointments) => {
         
         quarterlyData[quarter].orders++;
         
-        const revenue = getAppointmentRevenue(appointment);
-        if (!isNaN(revenue)) {
-          quarterlyData[quarter].revenue += revenue;
+        // Check for invoiceTotal (older field)
+        const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
+        
+        // Check for invoice.total (newer field)
+        const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+          ? parseFloat(appointment.invoice.total) 
+          : 0;
+        
+        // Check for other revenue fields as fallback
+        let otherRevenue = 0;
+        if (appointment.pickup && appointment.pickup.rate) {
+          otherRevenue += parseFloat(appointment.pickup.rate || 0);
+        }
+        if (appointment.delivery && appointment.delivery.rate) {
+          otherRevenue += parseFloat(appointment.delivery.rate || 0);
+        }
+        
+        // Use appropriate revenue value to avoid double-counting
+        let revenueToAdd = 0;
+        if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+          // Both fields exist, take the larger value to avoid double-counting
+          revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
+        } else if (invoiceDotTotal > 0) {
+          revenueToAdd = invoiceDotTotal;
+        } else if (invoiceTotal > 0) {
+          revenueToAdd = invoiceTotal;
+        } else if (otherRevenue > 0) {
+          revenueToAdd = otherRevenue;
+        }
+        
+        if (!isNaN(revenueToAdd)) {
+          quarterlyData[quarter].revenue += revenueToAdd;
         }
       } catch (error) {
         // Skip if date parsing fails
@@ -916,7 +1082,37 @@ export const getLondonOrderLocations = (appointments) => {
         id: appointment.appointmentId || Math.random().toString(36).substr(2, 9),
         address: appointment.pickup.to,
         customerType: appointment.customerType || 'Unknown',
-        revenue: getAppointmentRevenue(appointment) || 0,
+        revenue: (() => {
+          // Check for invoiceTotal (older field)
+          const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
+          
+          // Check for invoice.total (newer field)
+          const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+            ? parseFloat(appointment.invoice.total) 
+            : 0;
+          
+          // Check for other revenue fields as fallback
+          let otherRevenue = 0;
+          if (appointment.pickup && appointment.pickup.rate) {
+            otherRevenue += parseFloat(appointment.pickup.rate || 0);
+          }
+          if (appointment.delivery && appointment.delivery.rate) {
+            otherRevenue += parseFloat(appointment.delivery.rate || 0);
+          }
+          
+          // Use appropriate revenue value to avoid double-counting
+          if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+            // Both fields exist, take the larger value to avoid double-counting
+            return Math.max(invoiceTotal, invoiceDotTotal);
+          } else if (invoiceDotTotal > 0) {
+            return invoiceDotTotal;
+          } else if (invoiceTotal > 0) {
+            return invoiceTotal;
+          } else if (otherRevenue > 0) {
+            return otherRevenue;
+          }
+          return 0;
+        })(),
         date: appointment.pickup.serviceDate ? 
           format(parseISO(appointment.pickup.serviceDate), 'MM/dd/yyyy') : 'Unknown'
       }));
@@ -1131,7 +1327,42 @@ export const getOrderLocations = async (appointments) => {
       cityId, // Add cityId to marker for debugging
       orderDetails: {
         customerType: appointment.customerType || appointment.customer_type || 'Unknown',
-        revenue: getAppointmentRevenue(appointment),
+        revenue: (() => {
+          // Check if already has calculated revenue
+          if (appointment.revenue && parseFloat(appointment.revenue) > 0) {
+            return parseFloat(appointment.revenue);
+          }
+          
+          // Check for invoiceTotal (older field)
+          const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
+          
+          // Check for invoice.total (newer field)
+          const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
+            ? parseFloat(appointment.invoice.total) 
+            : 0;
+          
+          // Check for other revenue fields as fallback
+          let otherRevenue = 0;
+          if (appointment.pickup && appointment.pickup.rate) {
+            otherRevenue += parseFloat(appointment.pickup.rate || 0);
+          }
+          if (appointment.delivery && appointment.delivery.rate) {
+            otherRevenue += parseFloat(appointment.delivery.rate || 0);
+          }
+          
+          // Use appropriate revenue value to avoid double-counting
+          if (invoiceTotal > 0 && invoiceDotTotal > 0) {
+            // Both fields exist, take the larger value to avoid double-counting
+            return Math.max(invoiceTotal, invoiceDotTotal);
+          } else if (invoiceDotTotal > 0) {
+            return invoiceDotTotal;
+          } else if (invoiceTotal > 0) {
+            return invoiceTotal;
+          } else if (otherRevenue > 0) {
+            return otherRevenue;
+          }
+          return 0;
+        })(),
         address: appointment.address || (appointment.pickup ? appointment.pickup.to : 'Unknown Address'),
         laundromatId: laundromatId,
         laundromatName: laundromatName,
