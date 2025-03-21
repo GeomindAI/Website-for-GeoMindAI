@@ -496,6 +496,90 @@ const Dashboard = () => {
     });
   }, [filteredAppointments]);
   
+  // Calculate statistics for ALL laundromats regardless of city filter
+  const allLaundromatStats = useMemo(() => {
+    // Use appointments without the city filter
+    const appointmentsWithoutCityFilter = appointments.filter(appointment => {
+      // Keep the other filters (customer type, laundromat, date range) but not city
+      
+      // Filter by customer type
+      if (customerTypeFilter !== 'all' && appointment.customerType !== customerTypeFilter) {
+        return false;
+      }
+      
+      // Filter by laundromat
+      if (laundromatFilter !== 'all' && 
+          (!appointment.cleaning || appointment.cleaning.cleaner !== laundromatFilter)) {
+        return false;
+      }
+      
+      // Apply date range filter
+      let inDateRange = false;
+      let dateChecked = false;
+
+      // Check pickup.serviceDate
+      if (appointment.pickup && appointment.pickup.serviceDate) {
+        dateChecked = true;
+        try {
+          const pickupDate = new Date(appointment.pickup.serviceDate);
+          if (!(pickupDate < startDate || pickupDate > endDate)) {
+            inDateRange = true;
+          }
+        } catch (error) {
+          // Ignore parse errors
+        }
+      }
+      
+      // Check service_date if we haven't found a valid date yet
+      if (!inDateRange && appointment.service_date) {
+        dateChecked = true;
+        try {
+          const serviceDate = new Date(appointment.service_date);
+          if (!(serviceDate < startDate || serviceDate > endDate)) {
+            inDateRange = true;
+          }
+        } catch (error) {
+          // Ignore parse errors
+        }
+      }
+      
+      // Check createdAt as fallback
+      if (!inDateRange && appointment.createdAt) {
+        dateChecked = true;
+        try {
+          const createdDate = new Date(appointment.createdAt);
+          if (!(createdDate < startDate || createdDate > endDate)) {
+            inDateRange = true;
+          }
+        } catch (error) {
+          // Ignore parse errors
+        }
+      }
+      
+      // If we checked dates but none were in range, filter out this appointment
+      if (dateChecked && !inDateRange) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // Get statistics for ALL laundromats
+    const stats = getLaundromatStatistics(appointmentsWithoutCityFilter);
+    
+    // Calculate retention rate
+    return stats.map(laundromat => {
+      const simpleRetentionRate = laundromat.customers > 0 
+        ? (laundromat.returningCustomers / laundromat.customers)
+        : 0;
+        
+      return {
+        ...laundromat,
+        retentionRate: simpleRetentionRate
+      };
+    });
+  }, [appointments, customerTypeFilter, laundromatFilter, startDate, endDate]);
+  
   const customerTypeDistribution = useMemo(() => getCustomerTypeDistribution(filteredAppointments), [filteredAppointments]);
   const monthlyOrdersTrend = useMemo(() => {
     // If 'all' is selected, show data for all cities, otherwise filter by selected city
@@ -584,12 +668,14 @@ const Dashboard = () => {
     };
   }, [filteredAppointments]);
 
-  // Calculate monthly retention rate trend
+  // Calculate monthly retention rate trend - using the same definition as the city table
   const retentionRateTrend = useMemo(() => {
     if (!appointments || appointments.length === 0) return [];
     
-    // Group appointments by month
+    // Group appointments by month and city
     const monthlyAppointments = {};
+    
+    // First pass: group appointments by month
     appointments.forEach(appointment => {
       // Only process appointments from the selected city or all cities if 'all' is selected
       if (selectedCity !== 'all' && appointment.cityId !== selectedCity) return;
@@ -615,40 +701,45 @@ const Dashboard = () => {
             name: monthName,
             date: date,
             appointments: [],
-            customers: new Set(),
-            returningCustomers: new Set()
+            customerAppointments: {}
           };
         }
         
         monthlyAppointments[monthKey].appointments.push(appointment);
         
-        // Add customer to this month's unique customers
+        // Track customer order counts
         if (appointment.customerId) {
-          monthlyAppointments[monthKey].customers.add(appointment.customerId);
-          
-          // Check if this customer has appeared in previous months
-          const isReturning = Object.keys(monthlyAppointments)
-            .filter(m => m !== monthKey && new Date(monthlyAppointments[m].date) < date)
-            .some(m => monthlyAppointments[m].customers.has(appointment.customerId));
-          
-          if (isReturning) {
-            monthlyAppointments[monthKey].returningCustomers.add(appointment.customerId);
+          if (!monthlyAppointments[monthKey].customerAppointments[appointment.customerId]) {
+            monthlyAppointments[monthKey].customerAppointments[appointment.customerId] = 0;
           }
+          monthlyAppointments[monthKey].customerAppointments[appointment.customerId]++;
         }
       }
     });
     
-    // Calculate retention rate for each month
+    // Second pass: calculate retention for each month (customers with multiple orders)
     return Object.values(monthlyAppointments)
-      .map(month => ({
-        name: month.name,
-        date: month.date,
-        month: month.key,
-        customers: month.customers.size,
-        returningCustomers: month.returningCustomers.size,
-        retentionRate: month.customers.size > 0 ? 
-          month.returningCustomers.size / month.customers.size : 0
-      }))
+      .map(month => {
+        // Count total customers in this month
+        const totalCustomers = Object.keys(month.customerAppointments).length;
+        
+        // Count returning customers (made multiple orders in this month)
+        const returningCustomers = Object.values(month.customerAppointments)
+          .filter(count => count > 1).length;
+        
+        // Calculate retention rate for the month
+        const retentionRate = totalCustomers > 0 ? 
+          returningCustomers / totalCustomers : 0;
+        
+        return {
+          name: month.name,
+          date: month.date,
+          month: month.key,
+          customers: totalCustomers,
+          returningCustomers: returningCustomers,
+          retentionRate: retentionRate
+        };
+      })
       .sort((a, b) => new Date(a.date) - new Date(b.date))
       // Filter out months with very few customers to avoid misleading rates
       .filter(month => month.customers >= 3);
@@ -935,14 +1026,14 @@ const Dashboard = () => {
   // Render laundromat table with sorting
   const renderLaundromatTable = () => {
     // Use all laundromats but highlight the ones from the selected city
-    let allLaundromats = laundromatStats;
+    let allLaundromats = allLaundromatStats;
     
     // Filter out low-value entries (no revenue or very few orders)
     allLaundromats = allLaundromats.filter(l => 
       l.revenue > 0 || l.orders >= 1
     );
     
-    // Sort the data
+    // Sort the data based on the selected column and direction
     const sortedLaundromats = [...allLaundromats].sort((a, b) => {
       let valueA, valueB;
       
@@ -960,13 +1051,13 @@ const Dashboard = () => {
           valueA = a.orders > 0 ? a.revenue / a.orders : 0;
           valueB = b.orders > 0 ? b.revenue / b.orders : 0;
           break;
-        case 'retentionScore':
-          valueA = a.returningCustomers && a.customers ? a.returningCustomers / a.customers : 0;
-          valueB = b.returningCustomers && b.customers ? b.returningCustomers / b.customers : 0;
+        case 'retentionRate':
+          valueA = a.retentionRate || 0;
+          valueB = b.retentionRate || 0;
           break;
         default:
-          valueA = a[sortColumn];
-          valueB = b[sortColumn];
+          valueA = a[sortColumn] || 0;
+          valueB = b[sortColumn] || 0;
       }
       
       // Compare values based on sort direction
@@ -979,19 +1070,42 @@ const Dashboard = () => {
       }
     });
     
-    // Show top 15 laundromats by orders to keep the table manageable
-    const topLaundromats = sortedLaundromats
-      .sort((a, b) => b.orders - a.orders)
-      .slice(0, 15);
+    // Take top laundromats by the selected sort criteria, not just orders
+    const topLaundromats = sortedLaundromats.slice(0, 15);
     
     return topLaundromats.map((laundromat) => {
       // Check if this laundromat belongs to the selected city
-      const matchesSelectedCity = selectedCity !== 'all' && 
+      let matchesSelectedCity = selectedCity !== 'all' && 
         (laundromat.city === CITY_MAPPING[selectedCity] || laundromat.cityId === selectedCity);
       
+      // Look for appointments from this laundromat in the specified city
+      if (!laundromat.cityId && selectedCity !== 'all') {
+        // Find the city where this laundromat appears most frequently
+        const cityAppearances = {};
+        appointments.forEach(appointment => {
+          if (appointment.cleaning && appointment.cleaning.cleaner === laundromat.id && appointment.cityId) {
+            cityAppearances[appointment.cityId] = (cityAppearances[appointment.cityId] || 0) + 1;
+          }
+        });
+        
+        // Check if this laundromat appears most frequently in the selected city
+        let maxCount = 0;
+        let mostFrequentCity = null;
+        Object.entries(cityAppearances).forEach(([cityId, count]) => {
+          if (count > maxCount) {
+            maxCount = count;
+            mostFrequentCity = cityId;
+          }
+        });
+        
+        if (mostFrequentCity === selectedCity) {
+          matchesSelectedCity = true;
+        }
+      }
+      
       // Calculate retention rate properly
-      const customers = laundromat.customers || laundromat.customerCount || 0;
-      const returningCustomers = laundromat.returningCustomers || laundromat.returningCustomerCount || 0;
+      const customers = laundromat.customers ? laundromat.customers.size : 0;
+      const returningCustomers = laundromat.returningCustomers ? laundromat.returningCustomers.size : 0;
       const retentionRate = customers > 0 ? returningCustomers / customers : 0;
       
       return (
@@ -999,6 +1113,7 @@ const Dashboard = () => {
           key={laundromat.id} 
           style={{ 
             borderBottom: '1px solid #E5E7EB',
+            backgroundColor: matchesSelectedCity ? 'rgba(254, 240, 138, 0.1)' : 'transparent'
           }}
         >
           <td style={{ padding: '12px 16px' }}>
@@ -2056,9 +2171,8 @@ const Dashboard = () => {
           </Typography>
           <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
             <Typography variant="body1" color="text.secondary">
-              {selectedCity !== 'all' 
-                ? `Showing all laundromats with ${CITY_MAPPING[selectedCity]} laundromats highlighted`
-                : `Showing all laundromats across cities`}
+              Showing all laundromats across all cities
+              {selectedCity !== 'all' && `, with ${CITY_MAPPING[selectedCity]} laundromats highlighted`}
             </Typography>
             {selectedCity !== 'all' && (
               <Box 
@@ -2073,6 +2187,7 @@ const Dashboard = () => {
                   fontWeight: 'medium'
                 }}
               >
+                <Icon sx={{ verticalAlign: 'middle', fontSize: '0.875rem', mr: 0.5 }}>star</Icon>
                 {CITY_MAPPING[selectedCity]} Highlighted
               </Box>
             )}
@@ -2145,9 +2260,9 @@ const Dashboard = () => {
                     </th>
                     <th 
                       style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280', cursor: 'pointer' }}
-                      onClick={() => handleSort('retentionScore')}
+                      onClick={() => handleSort('retentionRate')}
                     >
-                      Retention <SortIcon column="retentionScore" />
+                      Retention <SortIcon column="retentionRate" />
                     </th>
                     <th 
                       style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid #E5E7EB', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280', cursor: 'pointer' }}
