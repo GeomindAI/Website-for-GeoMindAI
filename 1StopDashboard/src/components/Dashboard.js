@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { 
   Box, Container, Grid, Paper, Typography, 
   AppBar, Toolbar, MenuItem,
@@ -40,7 +40,8 @@ import {
   CITY_CENTERS,
   CITY_LAUNDROMATS,
   normalizeCityId,
-  LAUNDROMAT_COLORS
+  LAUNDROMAT_COLORS,
+  getAppointmentRevenue
 } from '../utils/dataProcessor';
 import { addProjectionsToComponent } from '../utils/ProjectionImplementation';
 
@@ -547,7 +548,7 @@ const Dashboard = () => {
         id: app.appointmentId,
         address,
         customerType: app.customerType || 'Unknown',
-        revenue: parseFloat(app.invoiceTotal || 0)
+        revenue: getAppointmentRevenue(app)
       };
     });
   }, [appointments]);
@@ -557,37 +558,8 @@ const Dashboard = () => {
     return {
       totalOrders: filteredAppointments.length,
       totalRevenue: filteredAppointments.reduce((sum, appointment) => {
-        // Check for invoiceTotal (older field)
-        const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
-        
-        // Check for invoice.total (newer field)
-        const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
-          ? parseFloat(appointment.invoice.total) 
-          : 0;
-        
-        // Check for other revenue fields as fallback
-        let otherRevenue = 0;
-        if (appointment.pickup && appointment.pickup.rate) {
-          otherRevenue += parseFloat(appointment.pickup.rate || 0);
-        }
-        if (appointment.delivery && appointment.delivery.rate) {
-          otherRevenue += parseFloat(appointment.delivery.rate || 0);
-        }
-        
-        // Use appropriate revenue value to avoid double-counting
-        let revenueToAdd = 0;
-        if (invoiceTotal > 0 && invoiceDotTotal > 0) {
-          // Both fields exist, take the larger value to avoid double-counting
-          revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
-        } else if (invoiceDotTotal > 0) {
-          revenueToAdd = invoiceDotTotal;
-        } else if (invoiceTotal > 0) {
-          revenueToAdd = invoiceTotal;
-        } else if (otherRevenue > 0) {
-          revenueToAdd = otherRevenue;
-        }
-        
-        return sum + (isNaN(revenueToAdd) ? 0 : revenueToAdd);
+        const revenue = parseFloat(appointment.invoiceTotal || 0);
+        return sum + (isNaN(revenue) ? 0 : revenue);
       }, 0),
       totalCustomers: new Set(filteredAppointments.map(a => a.customerId).filter(Boolean)).size,
       totalLaundromats: new Set(filteredAppointments
@@ -595,37 +567,8 @@ const Dashboard = () => {
         .map(a => a.cleaning.cleaner)).size,
       avgOrderValue: filteredAppointments.length > 0 ? 
         (filteredAppointments.reduce((sum, appointment) => {
-          // Check for invoiceTotal (older field)
-          const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
-          
-          // Check for invoice.total (newer field)
-          const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
-            ? parseFloat(appointment.invoice.total) 
-            : 0;
-          
-          // Check for other revenue fields as fallback
-          let otherRevenue = 0;
-          if (appointment.pickup && appointment.pickup.rate) {
-            otherRevenue += parseFloat(appointment.pickup.rate || 0);
-          }
-          if (appointment.delivery && appointment.delivery.rate) {
-            otherRevenue += parseFloat(appointment.delivery.rate || 0);
-          }
-          
-          // Use appropriate revenue value to avoid double-counting
-          let revenueToAdd = 0;
-          if (invoiceTotal > 0 && invoiceDotTotal > 0) {
-            // Both fields exist, take the larger value to avoid double-counting
-            revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
-          } else if (invoiceDotTotal > 0) {
-            revenueToAdd = invoiceDotTotal;
-          } else if (invoiceTotal > 0) {
-            revenueToAdd = invoiceTotal;
-          } else if (otherRevenue > 0) {
-            revenueToAdd = otherRevenue;
-          }
-          
-          return sum + (isNaN(revenueToAdd) ? 0 : revenueToAdd);
+          const revenue = parseFloat(appointment.invoiceTotal || 0);
+          return sum + (isNaN(revenue) ? 0 : revenue);
         }, 0) / filteredAppointments.length) : 0,
       avgWeight: filteredAppointments
         .filter(a => a.cleaning && a.cleaning.orderDetails && a.cleaning.orderDetails.washFoldWeight)
@@ -1233,37 +1176,8 @@ const Dashboard = () => {
       
       // Calculate total revenue across all cities
       const totalRevenue = appointments.reduce((sum, appointment) => {
-        // Check for invoiceTotal (older field)
-        const invoiceTotal = parseFloat(appointment.invoiceTotal || 0);
-        
-        // Check for invoice.total (newer field)
-        const invoiceDotTotal = appointment.invoice && typeof appointment.invoice.total !== 'undefined' 
-          ? parseFloat(appointment.invoice.total) 
-          : 0;
-        
-        // Check for other revenue fields as fallback
-        let otherRevenue = 0;
-        if (appointment.pickup && appointment.pickup.rate) {
-          otherRevenue += parseFloat(appointment.pickup.rate || 0);
-        }
-        if (appointment.delivery && appointment.delivery.rate) {
-          otherRevenue += parseFloat(appointment.delivery.rate || 0);
-        }
-        
-        // Use appropriate revenue value to avoid double-counting
-        let revenueToAdd = 0;
-        if (invoiceTotal > 0 && invoiceDotTotal > 0) {
-          // Both fields exist, take the larger value to avoid double-counting
-          revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
-        } else if (invoiceDotTotal > 0) {
-          revenueToAdd = invoiceDotTotal;
-        } else if (invoiceTotal > 0) {
-          revenueToAdd = invoiceTotal;
-        } else if (otherRevenue > 0) {
-          revenueToAdd = otherRevenue;
-        }
-        
-        return sum + (isNaN(revenueToAdd) ? 0 : revenueToAdd);
+        const revenue = parseFloat(appointment.invoiceTotal || 0);
+        return sum + (isNaN(revenue) ? 0 : revenue);
       }, 0);
       
       setTotalRevenueAllCities(totalRevenue);
@@ -2193,37 +2107,8 @@ const Dashboard = () => {
                       
                       const totalOrders = cityData.length;
                       const totalRevenue = cityData.reduce((sum, a) => {
-                        // Check for invoiceTotal (older field)
-                        const invoiceTotal = parseFloat(a.invoiceTotal || 0);
-                        
-                        // Check for invoice.total (newer field)
-                        const invoiceDotTotal = a.invoice && typeof a.invoice.total !== 'undefined' 
-                          ? parseFloat(a.invoice.total) 
-                          : 0;
-                        
-                        // Check for other revenue fields as fallback
-                        let otherRevenue = 0;
-                        if (a.pickup && a.pickup.rate) {
-                          otherRevenue += parseFloat(a.pickup.rate || 0);
-                        }
-                        if (a.delivery && a.delivery.rate) {
-                          otherRevenue += parseFloat(a.delivery.rate || 0);
-                        }
-                        
-                        // Use appropriate revenue value to avoid double-counting
-                        let revenueToAdd = 0;
-                        if (invoiceTotal > 0 && invoiceDotTotal > 0) {
-                          // Both fields exist, take the larger value to avoid double-counting
-                          revenueToAdd = Math.max(invoiceTotal, invoiceDotTotal);
-                        } else if (invoiceDotTotal > 0) {
-                          revenueToAdd = invoiceDotTotal;
-                        } else if (invoiceTotal > 0) {
-                          revenueToAdd = invoiceTotal;
-                        } else if (otherRevenue > 0) {
-                          revenueToAdd = otherRevenue;
-                        }
-                        
-                        return sum + (isNaN(revenueToAdd) ? 0 : revenueToAdd);
+                        const revenue = parseFloat(a.invoiceTotal || 0);
+                        return sum + (isNaN(revenue) ? 0 : revenue);
                       }, 0);
                       const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
                       
