@@ -48,6 +48,18 @@
             color: #666;
             margin-top: 20px;
         }
+        .test-section {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f0f4ff;
+            border-radius: 8px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 5px 10px;
+            background-color: #eee;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -60,6 +72,36 @@
         <div id="verification-result"></div>
     </div>
     
+    <div class="test-section">
+        <h2>Path Tests</h2>
+        <p>Testing different path patterns to find where the file is actually located:</p>
+        
+        <div>
+            <h3>1. Relative path: "./revenue_data.json"</h3>
+            <div class="test-result" id="relative-result">Testing...</div>
+        </div>
+        
+        <div>
+            <h3>2. Root-relative path: "/revenue_data.json"</h3>
+            <div class="test-result" id="root-result">Testing...</div>
+        </div>
+        
+        <div>
+            <h3>3. Full path: "/1stop/dashboard/revenue_data.json"</h3>
+            <div class="test-result" id="full-result">Testing...</div>
+        </div>
+        
+        <div>
+            <h3>4. Case variation 1: "REVENUE_DATA.JSON"</h3>
+            <div class="test-result" id="uppercase-result">Testing...</div>
+        </div>
+        
+        <div>
+            <h3>5. Case variation 2: "Revenue_Data.Json"</h3>
+            <div class="test-result" id="mixedcase-result">Testing...</div>
+        </div>
+    </div>
+    
     <div id="timestamp"></div>
 
     <script>
@@ -68,7 +110,7 @@
         
         // Add a random timestamp parameter to prevent caching
         const timestamp = new Date().getTime();
-        fetch(`revenue_data.json?t=${timestamp}`)
+        fetch(`./revenue_data.json?t=${timestamp}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -134,6 +176,35 @@
                     <p class="error">Failed to load revenue data: ${error.message}</p>
                 `;
             });
+            
+        // Test different path patterns
+        function testPath(path, elementId) {
+            const t = new Date().getTime();
+            fetch(`${path}?t=${t}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById(elementId).innerHTML = 
+                        `<span class="success">✅ SUCCESS! Found at ${path}. Total Revenue: $${data.total_revenue}</span>`;
+                })
+                .catch(error => {
+                    document.getElementById(elementId).innerHTML = 
+                        `<span class="error">❌ ERROR: ${error.message}</span>`;
+                });
+        }
+        
+        // Run the path tests
+        window.onload = function() {
+            testPath('./revenue_data.json', 'relative-result');
+            testPath('/revenue_data.json', 'root-result');
+            testPath('/1stop/dashboard/revenue_data.json', 'full-result');
+            testPath('./REVENUE_DATA.JSON', 'uppercase-result');
+            testPath('./Revenue_Data.Json', 'mixedcase-result');
+        };
     </script>
 </body>
 </html> 
