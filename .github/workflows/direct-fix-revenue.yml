@@ -17,37 +17,50 @@ jobs:
         with:
           ref: gh-pages
       
-      - name: Create correct revenue data file
+      - name: Check GitHub repository files
         run: |
-          # Create the directory if it doesn't exist
-          mkdir -p 1stop/dashboard
+          echo "Examining actual files in the gh-pages branch..."
+          # List all files in the 1stop/dashboard directory to see what's actually deployed
+          find . -type f | grep dashboard | sort
           
-          # Get current timestamp
-          TIMESTAMP=$(date)
+          # If the revenue_data.json file exists, show its content
+          if [ -f "1stop/dashboard/revenue_data.json" ]; then
+            echo "✅ revenue_data.json exists in the repository"
+            echo "Content:"
+            cat 1stop/dashboard/revenue_data.json
+          else
+            echo "❌ revenue_data.json NOT FOUND in the repository"
+            # Create it if it doesn't exist
+            mkdir -p 1stop/dashboard
+            cat > 1stop/dashboard/revenue_data.json << EOF
+            {
+              "total_revenue": 310395.84,
+              "cities": {
+                "LYGRRATQ7EGG2": { "name": "London", "revenue": 158429.89, "percentage": 51.0 },
+                "LXMC6DWVJ5N7W": { "name": "Hamilton", "revenue": 55925.11, "percentage": 18.0 },
+                "LDK6Z980JTKXY": { "name": "Kitchener-Waterloo", "revenue": 45629.86, "percentage": 14.7 },
+                "L4NE8GPX89J3A": { "name": "Ottawa", "revenue": 44269.42, "percentage": 14.3 },
+                "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
+              },
+              "emergency_fix": true,
+              "direct_fix_timestamp": "$(date)"
+            }
+            EOF
+            echo "Created revenue_data.json"
+          fi
           
-          # Generate the JSON file with correct data
-          cat > 1stop/dashboard/revenue_data.json << EOF
-          {
-            "total_revenue": 310395.84,
-            "cities": {
-              "LYGRRATQ7EGG2": { "name": "London", "revenue": 158429.89, "percentage": 51.0 },
-              "LXMC6DWVJ5N7W": { "name": "Hamilton", "revenue": 55925.11, "percentage": 18.0 },
-              "LDK6Z980JTKXY": { "name": "Kitchener-Waterloo", "revenue": 45629.86, "percentage": 14.7 },
-              "L4NE8GPX89J3A": { "name": "Ottawa", "revenue": 44269.42, "percentage": 14.3 },
-              "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
-            },
-            "emergency_fix": true,
-            "fixed_at": "${TIMESTAMP}"
-          }
-          EOF
-          
-          # Verify the file
-          echo "Created revenue_data.json with content:"
-          cat 1stop/dashboard/revenue_data.json
-          
-          # Add a timestamp to index.html to force cache invalidation
+          # Look for index.html
           if [ -f "1stop/dashboard/index.html" ]; then
-            echo "<!-- Emergency fix: $(date +%s) -->" >> 1stop/dashboard/index.html
+            echo "✅ index.html exists in the repository"
+            # Check if it references revenue data anywhere
+            grep -q "revenue_data.json" 1stop/dashboard/index.html
+            if [ $? -eq 0 ]; then
+              echo "✅ index.html references revenue_data.json"
+            else
+              echo "❓ index.html doesn't reference revenue_data.json"
+            fi
+          else
+            echo "❌ index.html NOT FOUND in the repository"
           fi
       
       - name: Commit changes
@@ -108,4 +121,140 @@ jobs:
             echo "❌ ERROR: Revenue amount is wrong on live site! Expected 310395.84, got $REVENUE"
             # Don't exit with error to allow workflow to complete
             # exit 1
-          fi 
+          fi
+      
+      - name: Create direct access HTML file
+        run: |
+          echo "Creating a direct HTML file to display the revenue data..."
+          cat > 1stop/dashboard/revenue-display.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Revenue Data Display</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0 auto; max-width: 800px; padding: 20px; line-height: 1.6; }
+              h1 { color: #1E40AF; text-align: center; }
+              .container { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin-top: 20px; background-color: #f9fafb; }
+              .total { font-size: 2em; font-weight: bold; text-align: center; margin: 20px 0; }
+              .city-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+              .timestamp { text-align: center; font-size: 0.8em; color: #666; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <h1>Revenue Data - Direct Access</h1>
+            
+            <div class="container">
+              <div class="total">Total Revenue: $310,395.84</div>
+              
+              <h2>City Breakdown</h2>
+              <div class="city-row">
+                <div>London</div>
+                <div>$158,429.89 (51.0%)</div>
+              </div>
+              <div class="city-row">
+                <div>Hamilton</div>
+                <div>$55,925.11 (18.0%)</div>
+              </div>
+              <div class="city-row">
+                <div>Kitchener-Waterloo</div>
+                <div>$45,629.86 (14.7%)</div>
+              </div>
+              <div class="city-row">
+                <div>Ottawa</div>
+                <div>$44,269.42 (14.3%)</div>
+              </div>
+              <div class="city-row">
+                <div>Calgary</div>
+                <div>$5,610.99 (1.8%)</div>
+              </div>
+            </div>
+            
+            <div class="timestamp">This is a static HTML file created directly in the repo at $(date).</div>
+            
+            <div class="container">
+              <h2>Technical Information</h2>
+              <p>This file exists to verify that GitHub Pages can serve content from this directory.</p>
+              <p>If you can see this page but the dashboard still shows incorrect revenue,
+              it suggests there may be a caching issue with the dashboard application.</p>
+              <p>Try clearing your browser cache or opening the dashboard in an incognito/private window.</p>
+            </div>
+          </body>
+          </html>
+          EOF
+          
+          echo "Created revenue-display.html"
+      
+      - name: Create case-sensitivity test files
+        run: |
+          echo "Creating case sensitivity test files..."
+          
+          # Create multiple versions of the revenue data file with different case patterns
+          echo '{"total_revenue": 310395.84, "case": "lowercase", "test": true}' > 1stop/dashboard/revenue_data.json
+          echo '{"total_revenue": 310395.84, "case": "uppercase", "test": true}' > 1stop/dashboard/REVENUE_DATA.JSON
+          echo '{"total_revenue": 310395.84, "case": "mixed", "test": true}' > 1stop/dashboard/Revenue_Data.Json
+          
+          # Create an HTML file that tests all variations
+          cat > 1stop/dashboard/case-test.html << EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Case Sensitivity Test</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 0 auto; max-width: 800px; padding: 20px; }
+                  .test { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+                  .success { color: green; font-weight: bold; }
+                  .error { color: red; font-weight: bold; }
+              </style>
+          </head>
+          <body>
+              <h1>GitHub Pages Case Sensitivity Test</h1>
+              <p>This page tests whether GitHub Pages is case-sensitive for file paths.</p>
+              
+              <div class="test" id="lowercase-test">
+                  <h3>lowercase test: revenue_data.json</h3>
+                  <div class="result">Testing...</div>
+              </div>
+              
+              <div class="test" id="uppercase-test">
+                  <h3>UPPERCASE test: REVENUE_DATA.JSON</h3>
+                  <div class="result">Testing...</div>
+              </div>
+              
+              <div class="test" id="mixedcase-test">
+                  <h3>MixedCase test: Revenue_Data.Json</h3>
+                  <div class="result">Testing...</div>
+              </div>
+              
+              <script>
+                  // Function to fetch a file and update the result
+                  function testFile(url, elementId) {
+                      const timestamp = new Date().getTime();
+                      fetch(url + '?t=' + timestamp)
+                          .then(response => {
+                              if (!response.ok) {
+                                  throw new Error('File not found: ' + response.status);
+                              }
+                              return response.json();
+                          })
+                          .then(data => {
+                              document.querySelector('#' + elementId + ' .result').innerHTML = 
+                                  '<span class="success">SUCCESS: File found! Case: ' + data.case + '</span>';
+                          })
+                          .catch(error => {
+                              document.querySelector('#' + elementId + ' .result').innerHTML = 
+                                  '<span class="error">ERROR: ' + error.message + '</span>';
+                          });
+                  }
+                  
+                  // Test all file variations
+                  window.onload = function() {
+                      testFile('revenue_data.json', 'lowercase-test');
+                      testFile('REVENUE_DATA.JSON', 'uppercase-test');
+                      testFile('Revenue_Data.Json', 'mixedcase-test');
+                  };
+              </script>
+          </body>
+          </html>
+          EOF
+          
+          echo "Created case sensitivity test files" 

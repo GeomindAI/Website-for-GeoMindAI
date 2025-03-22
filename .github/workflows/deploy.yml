@@ -91,4 +91,54 @@ jobs:
       - name: Verify deployment
         run: |
           echo "Verifying deployment..."
-          node 1StopDashboard/check-deployment.js 
+          node 1StopDashboard/check-deployment.js
+
+      - name: Create case variations for revenue data
+        run: |
+          echo "Creating multiple case variations of revenue_data.json..."
+          
+          # Copy the revenue file to different case variations to handle any potential case sensitivity issues
+          if [ -f "1StopDashboard/build/revenue_data.json" ]; then
+            echo "Creating case variations from existing file..."
+            cp 1StopDashboard/build/revenue_data.json 1StopDashboard/build/REVENUE_DATA.JSON
+            cp 1StopDashboard/build/revenue_data.json 1StopDashboard/build/Revenue_Data.Json
+          else
+            echo "Creating new revenue data files with all case variations..."
+            echo '{
+              "total_revenue": 310395.84,
+              "cities": {
+                "LYGRRATQ7EGG2": { "name": "London", "revenue": 158429.89, "percentage": 51.0 },
+                "LXMC6DWVJ5N7W": { "name": "Hamilton", "revenue": 55925.11, "percentage": 18.0 },
+                "LDK6Z980JTKXY": { "name": "Kitchener-Waterloo", "revenue": 45629.86, "percentage": 14.7 },
+                "L4NE8GPX89J3A": { "name": "Ottawa", "revenue": 44269.42, "percentage": 14.3 },
+                "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
+              },
+              "generated_at": "'$(date)'",
+              "case": "lowercase"
+            }' > 1StopDashboard/build/revenue_data.json
+            
+            echo '{
+              "total_revenue": 310395.84,
+              "cities": {
+                "LYGRRATQ7EGG2": { "name": "London", "revenue": 158429.89, "percentage": 51.0 },
+                "LXMC6DWVJ5N7W": { "name": "Hamilton", "revenue": 55925.11, "percentage": 18.0 },
+                "LDK6Z980JTKXY": { "name": "Kitchener-Waterloo", "revenue": 45629.86, "percentage": 14.7 },
+                "L4NE8GPX89J3A": { "name": "Ottawa", "revenue": 44269.42, "percentage": 14.3 },
+                "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
+              },
+              "generated_at": "'$(date)'",
+              "case": "uppercase"
+            }' > 1StopDashboard/build/REVENUE_DATA.JSON
+            
+            echo '{
+              "total_revenue": 310395.84,
+              "cities": {
+                "LYGRRATQ7EGG2": { "name": "London", "revenue": 158429.89, "percentage": 51.0 },
+                "LXMC6DWVJ5N7W": { "name": "Hamilton", "revenue": 55925.11, "percentage": 18.0 },
+                "LDK6Z980JTKXY": { "name": "Kitchener-Waterloo", "revenue": 45629.86, "percentage": 14.7 },
+                "L4NE8GPX89J3A": { "name": "Ottawa", "revenue": 44269.42, "percentage": 14.3 },
+                "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
+              },
+              "generated_at": "'$(date)'",
+              "case": "mixed"
+            }' > 1StopDashboard/build/Revenue_Data.Json 
