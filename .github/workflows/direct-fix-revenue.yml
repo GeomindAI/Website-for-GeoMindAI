@@ -12,6 +12,12 @@ jobs:
   fix-revenue-data:
     runs-on: ubuntu-latest
     steps:
+      - name: Display Emergency Fix Info
+        run: |
+          echo "==================== EMERGENCY REVENUE FIX ===================="
+          echo "This is a direct fix to update the revenue data to the correct value"
+          echo "Total revenue should be: $310,395.84"
+          echo "================================================================"
       - name: Checkout GitHub Pages branch 🛎️
         uses: actions/checkout@v3
         with:
@@ -56,20 +62,18 @@ jobs:
           echo "Creating revenue data files..."
           
           # Create the essential revenue_data.json file
-          cat > 1stop/dashboard/revenue_data.json << EOF
-          {
-            "total_revenue": 310395.84,
-            "cities": {
-              "LYGRRATQ7EGG2": { "name": "London", "revenue": 158429.89, "percentage": 51.0 },
-              "LXMC6DWVJ5N7W": { "name": "Hamilton", "revenue": 55925.11, "percentage": 18.0 },
-              "LDK6Z980JTKXY": { "name": "Kitchener-Waterloo", "revenue": 45629.86, "percentage": 14.7 },
-              "L4NE8GPX89J3A": { "name": "Ottawa", "revenue": 44269.42, "percentage": 14.3 },
-              "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
-            },
-            "emergency_fix": true,
-            "timestamp": "$(date)"
-          }
-          EOF
+          echo "{" > 1stop/dashboard/revenue_data.json
+          echo "  \"total_revenue\": 310395.84," >> 1stop/dashboard/revenue_data.json
+          echo "  \"cities\": {" >> 1stop/dashboard/revenue_data.json
+          echo "    \"LYGRRATQ7EGG2\": { \"name\": \"London\", \"revenue\": 158429.89, \"percentage\": 51.0 }," >> 1stop/dashboard/revenue_data.json
+          echo "    \"LXMC6DWVJ5N7W\": { \"name\": \"Hamilton\", \"revenue\": 55925.11, \"percentage\": 18.0 }," >> 1stop/dashboard/revenue_data.json
+          echo "    \"LDK6Z980JTKXY\": { \"name\": \"Kitchener-Waterloo\", \"revenue\": 45629.86, \"percentage\": 14.7 }," >> 1stop/dashboard/revenue_data.json
+          echo "    \"L4NE8GPX89J3A\": { \"name\": \"Ottawa\", \"revenue\": 44269.42, \"percentage\": 14.3 }," >> 1stop/dashboard/revenue_data.json
+          echo "    \"LG0VGFKQ25XED\": { \"name\": \"Calgary\", \"revenue\": 5610.99, \"percentage\": 1.8 }" >> 1stop/dashboard/revenue_data.json
+          echo "  }," >> 1stop/dashboard/revenue_data.json
+          echo "  \"emergency_fix\": true," >> 1stop/dashboard/revenue_data.json
+          echo "  \"timestamp\": \"$(date)\"" >> 1stop/dashboard/revenue_data.json
+          echo "}" >> 1stop/dashboard/revenue_data.json
           
           # Create a data subdirectory for alternative paths
           mkdir -p 1stop/dashboard/data
@@ -77,81 +81,23 @@ jobs:
           # Create a copy in the data subdirectory
           cp 1stop/dashboard/revenue_data.json 1stop/dashboard/data/revenue_data.json
           
-          # Create a diagnostic verification page
-          cat > 1stop/dashboard/revenue-verify.html << EOF
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>Revenue Verification</title>
-              <style>
-                  body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-                  .success { color: green; font-weight: bold; }
-                  .error { color: red; font-weight: bold; }
-                  pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
-              </style>
-          </head>
-          <body>
-              <h1>Revenue Data Verification</h1>
-              <p>This page displays the revenue data directly from the JSON file.</p>
-              
-              <h2>Static Display (Hard-coded)</h2>
-              <p>Total Revenue: <span style="font-weight: bold; font-size: 1.2em;">$310,395.84</span></p>
-              
-              <h2>Dynamic Display</h2>
-              <div id="result">Loading...</div>
-              
-              <h2>Data Source Tests</h2>
-              <div id="tests">
-                  <div>
-                      <h3>Fetching from ./revenue_data.json</h3>
-                      <div id="test1">Testing...</div>
-                  </div>
-                  <div>
-                      <h3>Fetching from /revenue_data.json</h3>
-                      <div id="test2">Testing...</div>
-                  </div>
-                  <div>
-                      <h3>Fetching from /1stop/dashboard/revenue_data.json</h3>
-                      <div id="test3">Testing...</div>
-                  </div>
-                  <div>
-                      <h3>Fetching from ./data/revenue_data.json</h3>
-                      <div id="test4">Testing...</div>
-                  </div>
-              </div>
-              
-              <script>
-                  // Function to fetch data
-                  function fetchData(url, elementId) {
-                      const timestamp = new Date().getTime();
-                      fetch(url + '?t=' + timestamp)
-                          .then(response => {
-                              if (!response.ok) {
-                                  throw new Error('Status ' + response.status);
-                              }
-                              return response.json();
-                          })
-                          .then(data => {
-                              document.getElementById(elementId).innerHTML = 
-                                  '<div class="success">Success! Total revenue: $' + data.total_revenue + '</div>' +
-                                  '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-                          })
-                          .catch(error => {
-                              document.getElementById(elementId).innerHTML = 
-                                  '<div class="error">Error: ' + error.message + '</div>';
-                          });
-                  }
-                  
-                  // Test all paths
-                  fetchData('./revenue_data.json', 'result');
-                  fetchData('./revenue_data.json', 'test1');
-                  fetchData('/revenue_data.json', 'test2');
-                  fetchData('/1stop/dashboard/revenue_data.json', 'test3');
-                  fetchData('./data/revenue_data.json', 'test4');
-              </script>
-          </body>
-          </html>
-          EOF
+          # Create a simplified verification file instead of complex HTML
+          echo "Creating simplified verification file..."
+          echo "<!DOCTYPE html>" > 1stop/dashboard/revenue-verify.html
+          echo "<html><head><title>Revenue Verification</title></head>" >> 1stop/dashboard/revenue-verify.html
+          echo "<body>" >> 1stop/dashboard/revenue-verify.html
+          echo "<h1>Revenue Data Verification</h1>" >> 1stop/dashboard/revenue-verify.html
+          echo "<p>Total Revenue is $310,395.84</p>" >> 1stop/dashboard/revenue-verify.html
+          echo "<script>" >> 1stop/dashboard/revenue-verify.html
+          echo "fetch('./revenue_data.json?' + new Date().getTime())" >> 1stop/dashboard/revenue-verify.html
+          echo "  .then(response => response.json())" >> 1stop/dashboard/revenue-verify.html
+          echo "  .then(data => {" >> 1stop/dashboard/revenue-verify.html
+          echo "    document.body.innerHTML += '<p>Loaded Revenue: $' + data.total_revenue + '</p>';" >> 1stop/dashboard/revenue-verify.html
+          echo "    document.body.innerHTML += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';" >> 1stop/dashboard/revenue-verify.html
+          echo "  })" >> 1stop/dashboard/revenue-verify.html
+          echo "  .catch(err => document.body.innerHTML += '<p>Error: ' + err.message + '</p>');" >> 1stop/dashboard/revenue-verify.html
+          echo "</script>" >> 1stop/dashboard/revenue-verify.html
+          echo "</body></html>" >> 1stop/dashboard/revenue-verify.html
           
           # Verify the files
           echo "Created files:"
