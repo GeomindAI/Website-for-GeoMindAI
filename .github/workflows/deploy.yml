@@ -41,6 +41,23 @@ jobs:
           # Debug output to show build results
           echo "Build completed. Contents of build directory:"
           ls -la build/
+          
+      - name: Add cache control headers for JSON files
+        run: |
+          # Create .htaccess file with cache control directives
+          echo "# Disable caching for data files" > 1StopDashboard/build/.htaccess
+          echo "<FilesMatch \"\\.(json)$\">" >> 1StopDashboard/build/.htaccess
+          echo "Header set Cache-Control \"no-store, no-cache, must-revalidate, max-age=0\"" >> 1StopDashboard/build/.htaccess
+          echo "Header set Pragma \"no-cache\"" >> 1StopDashboard/build/.htaccess
+          echo "Header set Expires \"Wed, 11 Jan 1984 05:00:00 GMT\"" >> 1StopDashboard/build/.htaccess
+          echo "</FilesMatch>" >> 1StopDashboard/build/.htaccess
+          
+          # Also add a version timestamp to force cache invalidation
+          echo "// Version: $(date +%s)" > 1StopDashboard/build/version.js
+          
+          # Show the content of the htaccess file
+          echo "Created .htaccess file:"
+          cat 1StopDashboard/build/.htaccess
 
       - name: Deploy to proper directory
         run: |

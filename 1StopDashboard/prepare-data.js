@@ -154,7 +154,9 @@ function createRevenueDataFile(aggregatedData) {
 
 // Generate hardcoded verified data if source file is not available
 function generateVerifiedData() {
-  console.log("Generating verified data with correct revenue figures...");
+  console.log("=================================================================");
+  console.log("IMPORTANT: Using CORRECTED revenue figures ($310,395.84 total)");
+  console.log("=================================================================");
   
   // The corrected total revenue amount
   const totalRevenue = 310395.84;

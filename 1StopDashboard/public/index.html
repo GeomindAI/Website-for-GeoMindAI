@@ -25,247 +25,232 @@
     />
     <title>Laundry Service Analytics Dashboard</title>
     <style>
-      /* Ensure the app takes full height */
-      html, body, #root {
-        height: 100%;
+      /* Base styles */
+      body, html {
         margin: 0;
         padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        height: 100%;
+        background-color: #f3f4f6;
       }
       
-      /* Fallback content for debugging */
-      #debug {
-        display: none;
-        padding: 20px;
-        margin: 20px;
-        border: 1px solid #ccc;
-        background-color: #f5f5f5;
-      }
-      
-      #direct-load {
-        margin: 50px auto;
-        max-width: 800px;
-        padding: 20px;
-        background-color: white;
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        text-align: center;
-      }
-      
-      #direct-load h1 {
-        font-size: 24px;
-        margin-bottom: 20px;
-      }
-      
-      #direct-load button {
-        background-color: #1E3A8A;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 10px;
-      }
-      
-      #direct-load button:hover {
-        background-color: #2c5282;
-      }
-      
-      /* Auth form styles */
-      #auth-overlay {
+      /* Login screen */
+      #auth-screen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: #f3f4f6;
+        background: #f3f4f6;
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 9999;
+        z-index: 1000;
       }
       
-      #auth-form {
-        background-color: white;
+      .login-container {
+        background: white;
         padding: 2rem;
-        border-radius: 8px;
+        border-radius: 0.5rem;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         width: 90%;
         max-width: 400px;
       }
       
-      #auth-form h2 {
-        color: #1E3A8A;
-        margin-top: 0;
+      .login-header {
         text-align: center;
+        margin-bottom: 2rem;
       }
       
-      #auth-form input {
+      .login-header h1 {
+        color: #1e3a8a;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .login-header p {
+        color: #6b7280;
+        margin: 0;
+      }
+      
+      .login-form {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+      
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+      }
+      
+      .form-group input {
         width: 100%;
-        padding: 12px;
-        margin: 10px 0 20px;
-        border: 1px solid #D1D5DB;
-        border-radius: 4px;
-        font-size: 16px;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 1rem;
         box-sizing: border-box;
       }
       
-      #auth-form button {
-        width: 100%;
-        padding: 12px;
-        background-color: #1E3A8A;
+      .login-button {
+        background: #1e40af;
         color: white;
         border: none;
-        border-radius: 4px;
-        font-size: 16px;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        font-weight: 500;
         cursor: pointer;
+        transition: background-color 0.15s;
       }
       
-      #auth-form button:hover {
-        background-color: #1E40AF;
+      .login-button:hover {
+        background: #1e3a8a;
       }
       
-      #auth-error {
-        color: #DC2626;
-        margin-top: 16px;
+      .login-error {
+        color: #dc2626;
+        margin-top: 1rem;
         text-align: center;
         display: none;
       }
+      
+      /* Loader for dashboard iframe */
+      .loader-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f3f4f6;
+      }
+      
+      .loader {
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid #1e40af;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      #dashboard-frame {
+        display: none;
+        width: 100%;
+        height: 100vh;
+        border: none;
+      }
     </style>
     <script>
-      // Auth configuration
-      const AUTH_TOKEN_NAME = 'dashboardAuth';
-      const VALID_PASSWORD = '1win';
-      const TOKEN_EXPIRY_HOURS = 12;
-      const AUTH_CHECK_INTERVAL = 5 * 60 * 1000; // Check token validity every 5 minutes
-      
-      // Encryption helpers for more secure token storage
-      function hashCode(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-          const char = str.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash; // Convert to 32bit integer
+      // Password validation and dashboard loading
+      (function() {
+        // Constants
+        const CORRECT_PASSWORD = '1win';
+        const TOKEN_NAME = 'dashAuth';
+        const TOKEN_EXPIRY_HOURS = 12;
+        const DASHBOARD_PATH = './app/index.html';  // Path to the real dashboard
+        
+        // DOM elements
+        const authScreen = document.getElementById('auth-screen');
+        const loginForm = document.getElementById('login-form');
+        const passwordInput = document.getElementById('password');
+        const loginError = document.getElementById('login-error');
+        const loader = document.getElementById('loader');
+        const dashboardFrame = document.getElementById('dashboard-frame');
+        
+        // Check for existing authentication
+        function isAuthenticated() {
+          const authToken = getCookie(TOKEN_NAME);
+          if (!authToken) return false;
+          
+          // Parse token parts: timestamp.hash
+          const parts = authToken.split('.');
+          if (parts.length !== 2) return false;
+          
+          // Check if token is expired
+          const timestamp = parseInt(parts[0]);
+          const now = new Date().getTime();
+          const expiryTime = timestamp + (TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
+          
+          return now < expiryTime;
         }
-        return hash;
-      }
-      
-      function generateToken(password) {
-        // Create a more complex token with timestamp
-        const timestamp = new Date().getTime();
-        const hash = hashCode(password + timestamp);
-        return `${timestamp}.${hash}`;
-      }
-      
-      function setAuthToken() {
-        const timestamp = new Date().getTime();
-        const expiryTime = timestamp + (TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
-        const token = generateToken(VALID_PASSWORD);
         
-        // Set the auth cookie with expiry
-        document.cookie = `${AUTH_TOKEN_NAME}=${token}; expires=${new Date(expiryTime).toUTCString()}; path=/; SameSite=Strict`;
+        // Set authentication token
+        function setAuthToken() {
+          const timestamp = new Date().getTime();
+          const hash = hashCode(CORRECT_PASSWORD + timestamp);
+          const token = `${timestamp}.${hash}`;
+          const expiryTime = timestamp + (TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
+          
+          // Set cookie
+          document.cookie = `${TOKEN_NAME}=${token}; expires=${new Date(expiryTime).toUTCString()}; path=/; SameSite=Strict`;
+          
+          return token;
+        }
         
-        // Also store in sessionStorage as backup verification
-        sessionStorage.setItem(AUTH_TOKEN_NAME, token);
-        sessionStorage.setItem(`${AUTH_TOKEN_NAME}_expiry`, expiryTime);
+        // Simple hash function
+        function hashCode(str) {
+          let hash = 0;
+          for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+          }
+          return hash.toString(16); // Convert to hex
+        }
         
-        return token;
-      }
-      
-      // Auth validation
-      function isAuthenticated() {
-        // Check cookie
-        const cookieToken = getCookie(AUTH_TOKEN_NAME);
-        // Check sessionStorage
-        const sessionToken = sessionStorage.getItem(AUTH_TOKEN_NAME);
-        const sessionExpiry = sessionStorage.getItem(`${AUTH_TOKEN_NAME}_expiry`);
+        // Get cookie by name
+        function getCookie(name) {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop().split(';').shift();
+          return null;
+        }
         
-        // Check if session is expired
-        const now = new Date().getTime();
-        const isExpired = !sessionExpiry || now > parseInt(sessionExpiry);
+        // Load the dashboard
+        function loadDashboard() {
+          authScreen.style.display = 'none';
+          loader.style.display = 'flex';
+          
+          // Load the actual dashboard in an iframe
+          dashboardFrame.src = DASHBOARD_PATH;
+          dashboardFrame.onload = function() {
+            // Hide loader and show dashboard when it's loaded
+            loader.style.display = 'none';
+            dashboardFrame.style.display = 'block';
+          };
+        }
         
-        // Valid if both token sources exist and session is not expired
-        return cookieToken && sessionToken && cookieToken === sessionToken && !isExpired;
-      }
-      
-      function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-      }
-      
-      // Authentication check and enforcement
-      function checkAuth() {
-        // If not authenticated, show login form and hide app content
-        if (!isAuthenticated()) {
-          // Create auth overlay if it doesn't exist
-          let authOverlay = document.getElementById('auth-overlay');
-          if (!authOverlay) {
-            authOverlay = document.createElement('div');
-            authOverlay.id = 'auth-overlay';
-            authOverlay.innerHTML = `
-              <form id="auth-form">
-                <h2>1Stop Dashboard Access</h2>
-                <div>
-                  <label for="password">Password</label>
-                  <input type="password" id="password" required>
-                </div>
-                <button type="submit">Login</button>
-                <div id="auth-error">Invalid password. Please try again.</div>
-              </form>
-            `;
-            document.body.appendChild(authOverlay);
-            
-            // Add event listener to form
-            const form = document.getElementById('auth-form');
-            form.addEventListener('submit', function(e) {
-              e.preventDefault();
-              const password = document.getElementById('password').value;
-              if (password === VALID_PASSWORD) {
-                setAuthToken();
-                authOverlay.style.display = 'none';
-                document.getElementById('root').style.display = 'block';
-                // Reload data after authentication
-                window.location.reload();
-              } else {
-                document.getElementById('auth-error').style.display = 'block';
-              }
-            });
+        // Add event listener to login form
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const password = passwordInput.value;
+          if (password === CORRECT_PASSWORD) {
+            setAuthToken();
+            loadDashboard();
           } else {
-            authOverlay.style.display = 'flex';
+            loginError.style.display = 'block';
+            passwordInput.value = '';
+            passwordInput.focus();
           }
-          
-          // Hide app content
-          const rootElement = document.getElementById('root');
-          if (rootElement) {
-            rootElement.style.display = 'none';
-          }
-          
-          return false;
-        }
+        });
         
-        // User is authenticated
-        return true;
-      }
-      
-      // Periodically check auth status
-      function startAuthChecker() {
-        setInterval(() => {
-          if (!isAuthenticated()) {
-            // Force re-login if token becomes invalid
-            window.location.reload();
-          }
-        }, AUTH_CHECK_INTERVAL);
-      }
-      
-      // Check authentication immediately
-      const isAuthenticated = checkAuth();
-      
-      // Start periodic auth checker
-      if (isAuthenticated) {
-        document.addEventListener('DOMContentLoaded', startAuthChecker);
-      }
+        // Check authentication on page load
+        if (isAuthenticated()) {
+          loadDashboard();
+        }
+      })();
       
       // Protect direct access to data files
       document.addEventListener('DOMContentLoaded', function() {
@@ -282,7 +267,7 @@
             // Add authentication headers
             options = options || {};
             options.headers = options.headers || {};
-            options.headers['X-Auth-Token'] = getCookie(AUTH_TOKEN_NAME);
+            options.headers['X-Auth-Token'] = getCookie(TOKEN_NAME);
           }
           
           return originalFetch(url, options);
@@ -355,37 +340,34 @@
     <div id="root"></div>
     <div id="debug"></div>
     
-    <!-- Fallback direct load in case React doesn't initialize -->
-    <div id="direct-load">
-      <h1>Laundry Analytics Dashboard</h1>
-      <p>If you're seeing this, the dashboard React app didn't load correctly.</p>
-      <p>Common causes include:</p>
-      <ul style="text-align: left; display: inline-block;">
-        <li>Missing or corrupted resource files</li>
-        <li>JavaScript errors during initialization</li>
-        <li>Network issues loading required files</li>
-      </ul>
-      
-      <div style="margin-top: 20px;">
-        <button onclick="document.getElementById('debug').style.display = 'block';">Show Debug Info</button>
-        <button onclick="window.location.reload();">Reload Page</button>
-        <button onclick="window.location.href = 'appointments.json';">Try Accessing Data</button>
-      </div>
-      
-      <script>
-        // If React loads properly, this div will be hidden/replaced
-        setTimeout(function() {
-          const rootContent = document.getElementById('root').innerHTML.trim();
-          const directLoad = document.getElementById('direct-load');
+    <!-- Login Screen -->
+    <div id="auth-screen">
+      <div class="login-container">
+        <div class="login-header">
+          <h1>Laundry Analytics Dashboard</h1>
+          <p>Please enter the password to access the dashboard.</p>
+        </div>
+        
+        <form id="login-form" class="login-form">
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+          </div>
           
-          if (!rootContent) {
-            directLoad.style.display = 'block';
-            document.getElementById('debug').innerHTML += '<p>React did not render any content within 5 seconds</p>';
-          } else {
-            directLoad.style.display = 'none';
-          }
-        }, 5000);
-      </script>
+          <button type="submit" class="login-button">Login</button>
+          
+          <div id="login-error" class="login-error">
+            Incorrect password. Please try again.
+          </div>
+        </form>
+      </div>
     </div>
+    
+    <!-- Dashboard container (hidden until authenticated) -->
+    <div id="loader" class="loader-container" style="display: none;">
+      <div class="loader"></div>
+    </div>
+    
+    <iframe id="dashboard-frame" src="about:blank"></iframe>
   </body>
 </html> 
