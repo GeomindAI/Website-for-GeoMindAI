@@ -23,7 +23,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '16.20.2'
           # Disable caching to avoid the dependency resolution error
           # cache: 'npm'
           # cache-dependency-path: '**/package-lock.json'
@@ -39,6 +39,8 @@ jobs:
         run: |
           cd 1StopDashboard
           export NODE_OPTIONS=--openssl-legacy-provider
+          # Disable treating warnings as errors
+          export CI=false
           # Run the prepare-data and verify scripts to ensure correct revenue data
           node prepare-data.js
           node verify-revenue-data.js

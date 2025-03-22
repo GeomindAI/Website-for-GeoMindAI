@@ -22,8 +22,11 @@ jobs:
           # Create the directory if it doesn't exist
           mkdir -p 1stop/dashboard
           
+          # Get current timestamp
+          TIMESTAMP=$(date)
+          
           # Generate the JSON file with correct data
-          cat > 1stop/dashboard/revenue_data.json << 'EOF'
+          cat > 1stop/dashboard/revenue_data.json << EOF
           {
             "total_revenue": 310395.84,
             "cities": {
@@ -34,7 +37,7 @@ jobs:
               "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
             },
             "emergency_fix": true,
-            "fixed_at": "$(date)"
+            "fixed_at": "${TIMESTAMP}"
           }
           EOF
           
@@ -61,4 +64,36 @@ jobs:
       - name: Verify fix
         run: |
           echo "Verifying fix..."
-          cat 1stop/dashboard/revenue_data.json 
+          echo "File contents:"
+          cat 1stop/dashboard/revenue_data.json
+          
+      - name: Wait for GitHub Pages to update
+        run: |
+          echo "Waiting for GitHub Pages to update..."
+          # Sleep to allow GitHub Pages to update
+          sleep 60
+          
+      - name: Check live site data
+        run: |
+          echo "Checking live site data..."
+          # Install curl if not available
+          apt-get update -qq && apt-get install -y -qq curl jq || true
+          
+          # Add timestamp to avoid caching
+          TIMESTAMP=$(date +%s)
+          DATA=$(curl -s "https://geomindai.com/1stop/dashboard/revenue_data.json?t=$TIMESTAMP")
+          
+          echo "Live site data:"
+          echo "$DATA"
+          
+          # Extract total revenue
+          REVENUE=$(echo "$DATA" | jq -r '.total_revenue')
+          echo "Total revenue: $REVENUE"
+          
+          # Verify it's correct
+          if [ "$REVENUE" = "310395.84" ]; then
+            echo "✅ SUCCESS: Revenue amount is correct on live site!"
+          else
+            echo "❌ ERROR: Revenue amount is wrong on live site! Expected 310395.84, got $REVENUE"
+            exit 1
+          fi 
