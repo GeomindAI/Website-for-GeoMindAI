@@ -24,12 +24,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          # Completely remove cache option to fix the error
+          cache: 'npm'
+          cache-dependency-path: '1StopDashboard/package-lock.json'
 
       - name: Install Dependencies
         run: |
           cd 1StopDashboard
-          # Use regular npm install instead of npm ci which requires package-lock.json
+          # Use npm install which works regardless of package-lock.json status
           npm install
 
       - name: Build
