@@ -1,0 +1,32 @@
+{
+  "total_revenue": 310395.84,
+  "cities": {
+    "LYGRRATQ7EGG2": {
+      "name": "London",
+      "revenue": 158429.89,
+      "percentage": 51
+    },
+    "LXMC6DWVJ5N7W": {
+      "name": "Hamilton",
+      "revenue": 55925.11,
+      "percentage": 18
+    },
+    "LDK6Z980JTKXY": {
+      "name": "Kitchener-Waterloo",
+      "revenue": 45629.86,
+      "percentage": 14.7
+    },
+    "L4NE8GPX89J3A": {
+      "name": "Ottawa",
+      "revenue": 44269.42,
+      "percentage": 14.3
+    },
+    "LG0VGFKQ25XED": {
+      "name": "Calgary",
+      "revenue": 5610.99,
+      "percentage": 1.8
+    }
+  },
+  "corrected_at": "2025-03-22T04:12:12.703Z",
+  "corrected_by": "verify-revenue-data.js"
+}

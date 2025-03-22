@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Revenue Data Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #1E40AF;
+            text-align: center;
+        }
+        .container {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #f9fafb;
+        }
+        .city-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .total-row {
+            font-weight: bold;
+            font-size: 1.2em;
+            padding: 12px 0;
+            border-top: 2px solid #1E40AF;
+            margin-top: 12px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        #timestamp {
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Revenue Data Verification</h1>
+    
+    <div class="container">
+        <h2>Current Revenue Data</h2>
+        <div id="revenue-data">Loading...</div>
+        <div id="total-revenue"></div>
+        <div id="verification-result"></div>
+    </div>
+    
+    <div id="timestamp"></div>
+
+    <script>
+        // The expected correct revenue amount
+        const EXPECTED_REVENUE = 310395.84;
+        
+        // Add a random timestamp parameter to prevent caching
+        const timestamp = new Date().getTime();
+        fetch(`revenue_data.json?t=${timestamp}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Revenue data:', data);
+                
+                // Display the data
+                const revenueDataElement = document.getElementById('revenue-data');
+                revenueDataElement.innerHTML = '';
+                
+                // Add city rows
+                Object.keys(data.cities).forEach(cityId => {
+                    const city = data.cities[cityId];
+                    const cityRow = document.createElement('div');
+                    cityRow.className = 'city-row';
+                    cityRow.innerHTML = `
+                        <div>${city.name}</div>
+                        <div>$${city.revenue.toFixed(2)} (${city.percentage.toFixed(1)}%)</div>
+                    `;
+                    revenueDataElement.appendChild(cityRow);
+                });
+                
+                // Add total row
+                const totalRow = document.createElement('div');
+                totalRow.className = 'total-row';
+                totalRow.innerHTML = `
+                    <div>Total Revenue</div>
+                    <div>$${data.total_revenue.toFixed(2)}</div>
+                `;
+                document.getElementById('total-revenue').appendChild(totalRow);
+                
+                // Verify the total revenue
+                const verificationElement = document.getElementById('verification-result');
+                const difference = Math.abs(data.total_revenue - EXPECTED_REVENUE);
+                
+                if (difference < 0.01) {
+                    verificationElement.innerHTML = `
+                        <p class="success">✅ The revenue amount is correct! ($${data.total_revenue.toFixed(2)})</p>
+                    `;
+                } else {
+                    verificationElement.innerHTML = `
+                        <p class="error">❌ ERROR: The revenue amount is wrong!</p>
+                        <p>Expected: $${EXPECTED_REVENUE.toFixed(2)}</p>
+                        <p>Actual: $${data.total_revenue.toFixed(2)}</p>
+                        <p>Difference: $${difference.toFixed(2)}</p>
+                    `;
+                }
+                
+                // Display timestamp
+                const timestampElement = document.getElementById('timestamp');
+                timestampElement.textContent = `Page loaded at: ${new Date().toLocaleString()}`;
+                
+                if (data.timestamp || data.fixed_at || data.generated_at) {
+                    timestampElement.textContent += ` | Data generated: ${data.timestamp || data.fixed_at || data.generated_at}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching revenue data:', error);
+                document.getElementById('revenue-data').innerHTML = `
+                    <p class="error">Failed to load revenue data: ${error.message}</p>
+                `;
+            });
+    </script>
+</body>
+</html> 

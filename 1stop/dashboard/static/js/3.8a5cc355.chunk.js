@@ -1,0 +1,2 @@
+(this["webpackJsonplaundry-analytics-dashboard"]=this["webpackJsonplaundry-analytics-dashboard"]||[]).push([[3],{729:function(s,t,e){"use strict";s.exports=function(){throw new Error("ws does not work in the browser. Browser clients must use the native WebSocket object")}}}]);
+//# sourceMappingURL=3.8a5cc355.chunk.js.map

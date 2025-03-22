@@ -1,0 +1,219 @@
+{
+  "total_appointments": 3826,
+  "total_revenue": 316965.0203,
+  "cities": {
+    "LYGRRATQ7EGG2": {
+      "name": "London",
+      "revenue": 163012.78159999958,
+      "orders": 2201,
+      "percentage": 51.42926542673756
+    },
+    "L4NE8GPX89J3A": {
+      "name": "Ottawa",
+      "revenue": 45096.93050000001,
+      "orders": 501,
+      "percentage": 14.227731015023936
+    },
+    "LDK6Z980JTKXY": {
+      "name": "Kitchener-Waterloo",
+      "revenue": 46732.34100000006,
+      "orders": 542,
+      "percentage": 14.743690315028765
+    },
+    "LXMC6DWVJ5N7W": {
+      "name": "Hamilton",
+      "revenue": 55981.40920000004,
+      "orders": 467,
+      "percentage": 17.661699435166362
+    },
+    "LG0VGFKQ25XED": {
+      "name": "Calgary",
+      "revenue": 5610.988,
+      "orders": 94,
+      "percentage": 1.770223097390788
+    },
+    "LZ98N5DRTREGQ": {
+      "name": "Unknown",
+      "revenue": 339.78,
+      "orders": 6,
+      "percentage": 0.10719794874475617
+    },
+    "LV97CZFNH285C": {
+      "name": "Unknown",
+      "revenue": 143.74,
+      "orders": 8,
+      "percentage": 0.04534885264751091
+    }
+  },
+  "customer_types": {
+    "Residential": 2377,
+    "Airbnb": 224,
+    "Commercial": 795,
+    "Monthly": 383,
+    "Unknown": 47
+  },
+  "monthly_trends": [
+    {
+      "month": "2023-10",
+      "name": "October 2023",
+      "orders": 79,
+      "revenue": 4131.488
+    },
+    {
+      "month": "2023-11",
+      "name": "November 2023",
+      "orders": 97,
+      "revenue": 11979.279999999999
+    },
+    {
+      "month": "2023-12",
+      "name": "December 2023",
+      "orders": 130,
+      "revenue": 18994.139999999996
+    },
+    {
+      "month": "2023-5",
+      "name": "May 2023",
+      "orders": 63,
+      "revenue": 4902.0960000000005
+    },
+    {
+      "month": "2023-6",
+      "name": "June 2023",
+      "orders": 86,
+      "revenue": 8394.725999999999
+    },
+    {
+      "month": "2023-7",
+      "name": "July 2023",
+      "orders": 95,
+      "revenue": 8736.119999999999
+    },
+    {
+      "month": "2023-8",
+      "name": "August 2023",
+      "orders": 93,
+      "revenue": 7269.834
+    },
+    {
+      "month": "2023-9",
+      "name": "September 2023",
+      "orders": 86,
+      "revenue": 4732.59
+    },
+    {
+      "month": "2024-1",
+      "name": "January 2024",
+      "orders": 153,
+      "revenue": 27046.97739999999
+    },
+    {
+      "month": "2024-10",
+      "name": "October 2024",
+      "orders": 265,
+      "revenue": 20878.831999999988
+    },
+    {
+      "month": "2024-11",
+      "name": "November 2024",
+      "orders": 267,
+      "revenue": 17736.585000000003
+    },
+    {
+      "month": "2024-12",
+      "name": "December 2024",
+      "orders": 194,
+      "revenue": 12146.305999999995
+    },
+    {
+      "month": "2024-2",
+      "name": "February 2024",
+      "orders": 165,
+      "revenue": 16741.09440000001
+    },
+    {
+      "month": "2024-3",
+      "name": "March 2024",
+      "orders": 161,
+      "revenue": 18705.285999999993
+    },
+    {
+      "month": "2024-4",
+      "name": "April 2024",
+      "orders": 142,
+      "revenue": 9792.860000000004
+    },
+    {
+      "month": "2024-5",
+      "name": "May 2024",
+      "orders": 183,
+      "revenue": 10807.579999999996
+    },
+    {
+      "month": "2024-6",
+      "name": "June 2024",
+      "orders": 201,
+      "revenue": 12616.28
+    },
+    {
+      "month": "2024-7",
+      "name": "July 2024",
+      "orders": 217,
+      "revenue": 14417.349999999997
+    },
+    {
+      "month": "2024-8",
+      "name": "August 2024",
+      "orders": 225,
+      "revenue": 27951.285000000025
+    },
+    {
+      "month": "2024-9",
+      "name": "September 2024",
+      "orders": 261,
+      "revenue": 17504.13650000001
+    },
+    {
+      "month": "2025-1",
+      "name": "January 2025",
+      "orders": 243,
+      "revenue": 17267.00200000001
+    },
+    {
+      "month": "2025-2",
+      "name": "February 2025",
+      "orders": 227,
+      "revenue": 15348.780000000002
+    },
+    {
+      "month": "2025-3",
+      "name": "March 2025",
+      "orders": 182,
+      "revenue": 8864.391999999996
+    },
+    {
+      "month": "2025-4",
+      "name": "April 2025",
+      "orders": 2,
+      "revenue": 0
+    },
+    {
+      "month": "2025-5",
+      "name": "May 2025",
+      "orders": 2,
+      "revenue": 0
+    },
+    {
+      "month": "2025-6",
+      "name": "June 2025",
+      "orders": 2,
+      "revenue": 0
+    },
+    {
+      "month": "2025-7",
+      "name": "July 2025",
+      "orders": 1,
+      "revenue": 0
+    }
+  ]
+}

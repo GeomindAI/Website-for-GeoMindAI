@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1Stop Laundry Analytics Dashboard</title>
+  <!-- Google Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .dashboard {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background-color: #1e40af;
+      color: white;
+      padding: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .content {
+      flex: 1;
+      padding: 1.5rem;
+    }
+    
+    .footer {
+      background-color: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      padding: 1rem;
+      text-align: center;
+      color: #6b7280;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.2s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      height: 100%;
+    }
+    
+    .metric-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1e40af;
+      margin: 0.5rem 0;
+    }
+    
+    .metric-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0;
+    }
+    
+    .chart-container {
+      height: 300px;
+      position: relative;
+    }
+    
+    .city-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .city-table th,
+    .city-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .city-table th {
+      background-color: #f9fafb;
+      font-weight: 500;
+      color: #6b7280;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .city-table tr:hover {
+      background-color: #f3f4f6;
+    }
+    
+    .city-percentage {
+      display: flex;
+      align-items: center;
+    }
+    
+    .percentage-bar {
+      flex: 1;
+      height: 8px;
+      background-color: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-right: 0.5rem;
+    }
+    
+    .percentage-fill {
+      height: 100%;
+      background-color: #3b82f6;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <header class="header">
+      <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-xl font-bold">1Stop Laundry Analytics Dashboard</h1>
+        <div class="text-sm">
+          Data updated: <span id="current-date"></span>
+        </div>
+      </div>
+    </header>
+    
+    <main class="content container mx-auto">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Performance Overview</h2>
+        <p class="text-gray-600 mb-4">Key metrics for all operations from May 2023 to March 2025</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div class="card metric-card">
+            <span class="material-icons text-blue-600 text-4xl">attach_money</span>
+            <h3 class="metric-value" id="total-revenue">$0</h3>
+            <p class="metric-label">Total Revenue</p>
+          </div>
+          
+          <div class="card metric-card">
+            <span class="material-icons text-green-600 text-4xl">trending_up</span>
+            <h3 class="metric-value" id="yoy-growth">0%</h3>
+            <p class="metric-label">YOY Growth (2023-2024)</p>
+          </div>
+          
+          <div class="card metric-card">
+            <span class="material-icons text-purple-600 text-4xl">apartment</span>
+            <h3 class="metric-value" id="total-cities">0</h3>
+            <p class="metric-label">Active Cities</p>
+          </div>
+          
+          <div class="card metric-card">
+            <span class="material-icons text-amber-600 text-4xl">person</span>
+            <h3 class="metric-value" id="customer-count">0</h3>
+            <p class="metric-label">Total Orders</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Revenue by City</h3>
+            <div class="chart-container">
+              <canvas id="city-revenue-chart"></canvas>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Monthly Revenue Trend</h3>
+            <div class="chart-container">
+              <canvas id="monthly-trend-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">City Performance</h2>
+        
+        <div class="card">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Revenue by City</h3>
+          <div class="overflow-x-auto">
+            <table class="city-table">
+              <thead>
+                <tr>
+                  <th>City</th>
+                  <th>Revenue</th>
+                  <th>% of Total</th>
+                  <th width="30%">Distribution</th>
+                </tr>
+              </thead>
+              <tbody id="city-table-body">
+                <!-- City data will be inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Yearly Breakdown</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">2023</h3>
+            <h4 class="text-3xl font-bold text-blue-700 mb-2" id="revenue-2023">$0</h4>
+            <div class="chart-container h-48">
+              <canvas id="city-chart-2023"></canvas>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">2024</h3>
+            <h4 class="text-3xl font-bold text-blue-700 mb-2" id="revenue-2024">$0</h4>
+            <div class="chart-container h-48">
+              <canvas id="city-chart-2024"></canvas>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">2025 (YTD)</h3>
+            <h4 class="text-3xl font-bold text-blue-700 mb-2" id="revenue-2025">$0</h4>
+            <div class="chart-container h-48">
+              <canvas id="city-chart-2025"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Customer Analysis</h2>
+        
+        <div class="card">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Customer Type Distribution</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="chart-container h-64">
+              <canvas id="customer-type-chart"></canvas>
+            </div>
+            <div class="col-span-2">
+              <div class="h-64 flex items-center justify-center">
+                <div class="text-center">
+                  <h4 class="text-lg font-semibold text-gray-700 mb-2">Customer Insights</h4>
+                  <p class="text-gray-600 mb-4">Based on <span id="total-orders">0</span> orders across all cities</p>
+                  <div class="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <p class="text-gray-500 text-sm">Residential</p>
+                      <p class="text-xl font-bold text-blue-600" id="residential-percentage">0%</p>
+                    </div>
+                    <div>
+                      <p class="text-gray-500 text-sm">Commercial</p>
+                      <p class="text-xl font-bold text-green-600" id="commercial-percentage">0%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <footer class="footer">
+      <div class="container mx-auto">
+        <p class="text-sm">1Stop Laundry Analytics Dashboard &bull; Data from Python revenue analysis</p>
+      </div>
+    </footer>
+  </div>
+  
+  <script>
+    // Constants for chart colors - professional palette
+    const COLORS = [
+      '#1e88e5', '#26a69a', '#ffa726', '#ef5350', '#ab47bc',
+      '#66bb6a', '#ec407a', '#7e57c2', '#ff7043', '#5c6bc0'
+    ];
+    
+    // Format currency
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+      }).format(value);
+    }
+    
+    // Format percentage
+    function formatPercentage(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      }).format(value / 100);
+    }
+    
+    // Update current date
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+    
+    // Fetch and process data
+    async function fetchData() {
+      try {
+        const response = await fetch('./revenue_data.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Loaded revenue data:', data);
+        
+        // Update summary metrics
+        document.getElementById('total-revenue').textContent = formatCurrency(data.total_revenue);
+        
+        // Calculate YOY growth
+        const growth = ((data.years['2024'] / data.years['2023']) - 1) * 100;
+        document.getElementById('yoy-growth').textContent = `${growth.toFixed(1)}%`;
+        
+        // Update city count
+        document.getElementById('total-cities').textContent = Object.keys(data.cities).length;
+        
+        // Calculate total customers from all order types
+        const totalOrders = Object.values(data.customer_types).reduce((sum, count) => sum + count, 0);
+        document.getElementById('customer-count').textContent = totalOrders.toLocaleString();
+        document.getElementById('total-orders').textContent = totalOrders.toLocaleString();
+        
+        // Customer type percentages
+        const residentialPercentage = (data.customer_types.Residential / totalOrders * 100).toFixed(1);
+        const commercialPercentage = (data.customer_types.Commercial / totalOrders * 100).toFixed(1);
+        document.getElementById('residential-percentage').textContent = `${residentialPercentage}%`;
+        document.getElementById('commercial-percentage').textContent = `${commercialPercentage}%`;
+        
+        // Update yearly revenue figures
+        document.getElementById('revenue-2023').textContent = formatCurrency(data.years['2023']);
+        document.getElementById('revenue-2024').textContent = formatCurrency(data.years['2024']);
+        document.getElementById('revenue-2025').textContent = formatCurrency(data.years['2025']);
+        
+        // Render city revenue chart
+        renderCityRevenueChart(data.cities);
+        
+        // Render monthly trend chart
+        renderMonthlyTrendChart(data.monthly_trends);
+        
+        // Render customer type chart
+        renderCustomerTypeChart(data.customer_types);
+        
+        // Render city performance table
+        renderCityTable(data.cities);
+        
+        // Render yearly city breakdown charts
+        renderYearlyCharts(data.yearly_by_city, data.cities);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        document.body.innerHTML = `
+          <div class="flex items-center justify-center h-screen bg-red-50">
+            <div class="text-center p-8 bg-white rounded-lg shadow-lg">
+              <h1 class="text-2xl font-bold text-red-600 mb-4">Error Loading Dashboard</h1>
+              <p class="text-gray-700 mb-4">${error.message || 'Failed to load revenue data'}</p>
+              <button onclick="location.reload()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Try Again
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    // Render city revenue chart
+    function renderCityRevenueChart(cities) {
+      const cityData = Object.values(cities).sort((a, b) => b.revenue - a.revenue);
+      const ctx = document.getElementById('city-revenue-chart').getContext('2d');
+      
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: cityData.map(city => city.name),
+          datasets: [{
+            label: 'Revenue',
+            data: cityData.map(city => city.revenue),
+            backgroundColor: cityData.map((_, i) => COLORS[i % COLORS.length]),
+            borderColor: cityData.map((_, i) => COLORS[i % COLORS.length]),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => formatCurrency(value)
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: context => formatCurrency(context.raw)
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Render monthly trend chart
+    function renderMonthlyTrendChart(monthlyTrends) {
+      const ctx = document.getElementById('monthly-trend-chart').getContext('2d');
+      
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: monthlyTrends.map(month => month.name),
+          datasets: [{
+            label: 'Monthly Revenue',
+            data: monthlyTrends.map(month => month.revenue),
+            fill: false,
+            backgroundColor: '#3b82f6',
+            borderColor: '#3b82f6',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: value => formatCurrency(value)
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: context => formatCurrency(context.raw)
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Render customer type chart
+    function renderCustomerTypeChart(customerTypes) {
+      const ctx = document.getElementById('customer-type-chart').getContext('2d');
+      
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(customerTypes),
+          datasets: [{
+            data: Object.values(customerTypes),
+            backgroundColor: [
+              '#3b82f6', // Blue for Residential
+              '#10b981', // Green for Commercial
+              '#6b7280'  // Gray for Unknown
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            },
+            tooltip: {
+              callbacks: {
+                label: context => {
+                  const label = context.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Render city performance table
+    function renderCityTable(cities) {
+      const tableBody = document.getElementById('city-table-body');
+      const cityData = Object.values(cities).sort((a, b) => b.revenue - a.revenue);
+      
+      tableBody.innerHTML = cityData.map(city => `
+        <tr>
+          <td class="font-medium">${city.name}</td>
+          <td>${formatCurrency(city.revenue)}</td>
+          <td>${city.percentage.toFixed(1)}%</td>
+          <td>
+            <div class="city-percentage">
+              <div class="percentage-bar">
+                <div class="percentage-fill" style="width: ${city.percentage}%"></div>
+              </div>
+              <span>${city.percentage.toFixed(1)}%</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    // Render yearly city breakdown charts
+    function renderYearlyCharts(yearlyData, cityData) {
+      // Create a mapping of cityId to name
+      const cityNames = {};
+      Object.entries(cityData).forEach(([cityId, data]) => {
+        cityNames[cityId] = data.name;
+      });
+      
+      // Render each year's chart
+      Object.keys(yearlyData).forEach(year => {
+        const yearData = yearlyData[year];
+        const cityIds = Object.keys(yearData);
+        const revenues = Object.values(yearData);
+        const names = cityIds.map(id => cityNames[id] || 'Unknown');
+        
+        const ctx = document.getElementById(`city-chart-${year}`).getContext('2d');
+        
+        new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: names,
+            datasets: [{
+              data: revenues,
+              backgroundColor: cityIds.map((_, i) => COLORS[i % COLORS.length])
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'right',
+                labels: {
+                  boxWidth: 12,
+                  font: {
+                    size: 10
+                  }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: context => {
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((value / total) * 100).toFixed(1);
+                    return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+    }
+    
+    // Load data when page loads
+    window.addEventListener('DOMContentLoaded', fetchData);
+  </script>
+</body>
+</html> 

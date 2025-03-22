@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fallback Dashboard - 1Stop Laundry</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f3f4f6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #1a3b5d;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a3b5d;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1a3b5d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #dc2626;
+            text-align: center;
+            padding: 20px;
+            background-color: #fee2e2;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            background-color: #1a3b5d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .pagination button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        #data-table {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>1Stop Laundry Dashboard (Fallback View)</h1>
+        
+        <div id="loading">
+            <p style="text-align: center;">Loading data...</p>
+            <div class="loader"></div>
+        </div>
+        
+        <div id="error" style="display: none;" class="error"></div>
+        
+        <div id="dashboard" style="display: none;">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Total Appointments</div>
+                    <div class="stat-value" id="total-appointments">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Residential Orders</div>
+                    <div class="stat-value" id="residential-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Commercial Orders</div>
+                    <div class="stat-value" id="commercial-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unique Customers</div>
+                    <div class="stat-value" id="unique-customers">0</div>
+                </div>
+            </div>
+            
+            <h2>Recent Appointments</h2>
+            <div id="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Customer Type</th>
+                            <th>Phone</th>
+                            <th>City</th>
+                            <th>Service Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointments-table-body">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <button id="prev-page" disabled>Previous</button>
+                <span id="page-info" style="margin: 0 10px;">Page 1</span>
+                <button id="next-page">Next</button>
+            </div>
+            
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="../1stop/" style="color: #1a3b5d;">Back to Dashboard Gateway</a>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let allAppointments = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+        
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return 'Invalid Date';
+                
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return 'Error';
+            }
+        }
+        
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('./appointments.json');
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load data: ${response.status} ${response.statusText}`);
+                }
+                
+                allAppointments = await response.json();
+                
+                // Calculate stats
+                calculateStats();
+                
+                // Display appointments
+                displayAppointments();
+                
+                // Hide loading, show dashboard
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerText = `Failed to load data: ${error.message}`;
+            }
+        }
+        
+        // Calculate statistics
+        function calculateStats() {
+            // Total appointments
+            document.getElementById('total-appointments').innerText = allAppointments.length;
+            
+            // Count residential and commercial orders
+            const customerTypes = allAppointments.reduce((acc, appointment) => {
+                if (appointment.customerType === 'Residential') {
+                    acc.residential++;
+                } else if (appointment.customerType === 'Commercial') {
+                    acc.commercial++;
+                }
+                return acc;
+            }, { residential: 0, commercial: 0 });
+            
+            document.getElementById('residential-orders').innerText = customerTypes.residential;
+            document.getElementById('commercial-orders').innerText = customerTypes.commercial;
+            
+            // Count unique customers
+            const uniqueCustomers = new Set();
+            allAppointments.forEach(app => {
+                if (app.customerId) {
+                    uniqueCustomers.add(app.customerId);
+                }
+            });
+            
+            document.getElementById('unique-customers').innerText = uniqueCustomers.size;
+        }
+        
+        // Display appointments with pagination
+        function displayAppointments() {
+            const tableBody = document.getElementById('appointments-table-body');
+            tableBody.innerHTML = '';
+            
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = allAppointments.slice(start, end);
+            
+            paginatedData.forEach(appointment => {
+                const row = document.createElement('tr');
+                
+                // Get service date from pickup if available
+                const serviceDate = appointment.pickup ? appointment.pickup.serviceDate : null;
+                
+                row.innerHTML = `
+                    <td>${appointment.customerName || 'N/A'}</td>
+                    <td>${appointment.customerType || 'N/A'}</td>
+                    <td>${appointment.customerPhone || 'N/A'}</td>
+                    <td>${appointment.cityId || 'N/A'}</td>
+                    <td>${formatDate(serviceDate)}</td>
+                    <td>${appointment.status || (appointment.pickup ? appointment.pickup.status : 'N/A')}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Update pagination
+            document.getElementById('page-info').innerText = `Page ${currentPage} of ${Math.ceil(allAppointments.length / rowsPerPage)}`;
+            document.getElementById('prev-page').disabled = currentPage === 1;
+            document.getElementById('next-page').disabled = currentPage === Math.ceil(allAppointments.length / rowsPerPage);
+        }
+        
+        // Set up event listeners
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayAppointments();
+            }
+        });
+        
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (currentPage < Math.ceil(allAppointments.length / rowsPerPage)) {
+                currentPage++;
+                displayAppointments();
+            }
+        });
+        
+        // Load data when page loads
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html> 
