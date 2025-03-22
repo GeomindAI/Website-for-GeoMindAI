@@ -42,7 +42,14 @@ https.get(url, (res) => {
       if (revenueData.total_revenue === EXPECTED_REVENUE) {
         console.log('✅ SUCCESS: Revenue amount is correct!');
       } else {
-        console.log(`❌ ERROR: Revenue amount is wrong! Expected ${EXPECTED_REVENUE}, got ${revenueData.total_revenue}`);
+        // Compare with a small epsilon for floating point differences
+        const difference = Math.abs(revenueData.total_revenue - EXPECTED_REVENUE);
+        if (difference < 0.01) {
+          console.log(`✅ SUCCESS: Revenue amount is close enough (${revenueData.total_revenue} vs ${EXPECTED_REVENUE})`);
+        } else {
+          console.log(`❌ ERROR: Revenue amount is wrong! Expected ${EXPECTED_REVENUE}, got ${revenueData.total_revenue}`);
+          process.exit(1); // Exit with error code to fail the workflow
+        }
       }
       
       // Print city breakdown

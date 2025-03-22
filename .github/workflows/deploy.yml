@@ -24,41 +24,34 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
+          # Disable caching to avoid the dependency resolution error
+          # cache: 'npm'
+          # cache-dependency-path: '**/package-lock.json'
 
       - name: Install Dependencies
         run: |
           cd 1StopDashboard
           # Clean install to avoid dependency issues
           rm -rf node_modules
-          npm ci || npm install
+          npm install
 
       - name: Build
         run: |
           cd 1StopDashboard
           export NODE_OPTIONS=--openssl-legacy-provider
+          # Run the prepare-data and verify scripts to ensure correct revenue data
+          node prepare-data.js
+          node verify-revenue-data.js
           npm run build
           # Debug output to show build results
           echo "Build completed. Contents of build directory:"
           ls -la build/
-          
-      - name: Add cache control headers for JSON files
+
+      - name: Add version timestamp
         run: |
-          # Create .htaccess file with cache control directives
-          echo "# Disable caching for data files" > 1StopDashboard/build/.htaccess
-          echo "<FilesMatch \"\\.(json)$\">" >> 1StopDashboard/build/.htaccess
-          echo "Header set Cache-Control \"no-store, no-cache, must-revalidate, max-age=0\"" >> 1StopDashboard/build/.htaccess
-          echo "Header set Pragma \"no-cache\"" >> 1StopDashboard/build/.htaccess
-          echo "Header set Expires \"Wed, 11 Jan 1984 05:00:00 GMT\"" >> 1StopDashboard/build/.htaccess
-          echo "</FilesMatch>" >> 1StopDashboard/build/.htaccess
-          
-          # Also add a version timestamp to force cache invalidation
+          # Add a version timestamp to force cache invalidation
           echo "// Version: $(date +%s)" > 1StopDashboard/build/version.js
-          
-          # Show the content of the htaccess file
-          echo "Created .htaccess file:"
-          cat 1StopDashboard/build/.htaccess
+          echo "{\"build_time\": \"$(date)\", \"build_timestamp\": $(date +%s)}" > 1StopDashboard/build/build-info.json
 
       - name: Deploy to proper directory
         run: |
@@ -68,9 +61,6 @@ jobs:
           cp -R 1StopDashboard/build/* 1stop/dashboard/
           # Add a timestamp to force cache invalidation
           echo "<!-- Build: $(date +%s) -->" >> 1stop/dashboard/index.html
-          # Add version info to the data files
-          echo "// Generated: $(date +%s)" > 1stop/dashboard/version.js
-          echo "{\"build_time\": \"$(date)\", \"build_timestamp\": $(date +%s)}" > 1stop/dashboard/build-info.json
           # Debug information
           echo "Contents of 1stop/dashboard:"
           ls -la 1stop/dashboard/
@@ -78,12 +68,10 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: .  # Deploy the entire repository
+          folder: 1stop/dashboard  # Only deploy the dashboard directory
+          target-folder: 1stop/dashboard  # Deploy to the specific dashboard folder
           branch: gh-pages
-          clean: false  # Don't remove existing files outside our target
-          clean-exclude: |
-            **/*
-            !1stop/dashboard/**
+          clean: true  # Clean the target directory
           token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Wait for GitHub Pages to deploy
