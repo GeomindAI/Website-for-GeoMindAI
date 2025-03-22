@@ -1,0 +1,50 @@
+name: Deploy Dashboard
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '1StopDashboard/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 1StopDashboard/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd 1StopDashboard
+          npm ci
+
+      - name: Build
+        run: |
+          cd 1StopDashboard
+          export NODE_OPTIONS=--openssl-legacy-provider
+          npm run build
+
+      - name: Deploy to proper directory
+        run: |
+          # Create the destination directory if it doesn't exist
+          mkdir -p 1stop/dashboard
+          # Copy the build output to the correct directory
+          cp -R 1StopDashboard/build/* 1stop/dashboard/
+          # Debug information
+          echo "Contents of 1stop/dashboard:"
+          ls -la 1stop/dashboard/
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .  # Deploy the entire repository
+          branch: gh-pages
+          clean: false  # Don't remove existing files
+          token: ${{ secrets.GITHUB_TOKEN }} 
