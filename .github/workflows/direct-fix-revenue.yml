@@ -1,0 +1,54 @@
+name: Direct Revenue Data Fix
+
+on:
+  # Allow manual triggering
+  workflow_dispatch:
+
+# Permissions needed for GitHub Pages deployment
+permissions:
+  contents: write
+
+jobs:
+  fix-revenue-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub Pages branch 🛎️
+        uses: actions/checkout@v3
+        with:
+          ref: gh-pages
+      
+      - name: Create correct revenue data file
+        run: |
+          echo '{
+            "total_revenue": 310395.84,
+            "cities": {
+              "LYGRRATQ7EGG2": { "name": "London", "revenue": 158429.89, "percentage": 51.0 },
+              "LXMC6DWVJ5N7W": { "name": "Hamilton", "revenue": 55925.11, "percentage": 18.0 },
+              "LDK6Z980JTKXY": { "name": "Kitchener-Waterloo", "revenue": 45629.86, "percentage": 14.7 },
+              "L4NE8GPX89J3A": { "name": "Ottawa", "revenue": 44269.42, "percentage": 14.3 },
+              "LG0VGFKQ25XED": { "name": "Calgary", "revenue": 5610.99, "percentage": 1.8 }
+            },
+            "timestamp": '$(date +%s)',
+            "emergency_fix": true
+          }' > 1stop/dashboard/revenue_data.json
+          
+          # Verify the file
+          echo "Created revenue_data.json with content:"
+          cat 1stop/dashboard/revenue_data.json
+          
+          # Add a timestamp to index.html to force cache invalidation
+          if [ -f "1stop/dashboard/index.html" ]; then
+            sed -i '$ d' 1stop/dashboard/index.html  # Remove last line
+            echo "<!-- Emergency fix: $(date) -->" >> 1stop/dashboard/index.html
+          fi
+      
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add 1stop/dashboard/revenue_data.json
+          if [ -f "1stop/dashboard/index.html" ]; then
+            git add 1stop/dashboard/index.html
+          fi
+          git commit -m "Emergency fix: Update revenue_data.json with correct figures"
+          git push 

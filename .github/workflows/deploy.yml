@@ -25,13 +25,14 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: '1StopDashboard/package-lock.json'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install Dependencies
         run: |
           cd 1StopDashboard
-          # Use npm install which works regardless of package-lock.json status
-          npm install
+          # Clean install to avoid dependency issues
+          rm -rf node_modules
+          npm ci || npm install
 
       - name: Build
         run: |
@@ -65,6 +66,11 @@ jobs:
           mkdir -p 1stop/dashboard
           # Copy the build output to the correct directory
           cp -R 1StopDashboard/build/* 1stop/dashboard/
+          # Add a timestamp to force cache invalidation
+          echo "<!-- Build: $(date +%s) -->" >> 1stop/dashboard/index.html
+          # Add version info to the data files
+          echo "// Generated: $(date +%s)" > 1stop/dashboard/version.js
+          echo "{\"build_time\": \"$(date)\", \"build_timestamp\": $(date +%s)}" > 1stop/dashboard/build-info.json
           # Debug information
           echo "Contents of 1stop/dashboard:"
           ls -la 1stop/dashboard/
@@ -74,5 +80,19 @@ jobs:
         with:
           folder: .  # Deploy the entire repository
           branch: gh-pages
-          clean: false  # Don't remove existing files
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          clean: false  # Don't remove existing files outside our target
+          clean-exclude: |
+            **/*
+            !1stop/dashboard/**
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Wait for GitHub Pages to deploy
+        run: |
+          echo "Waiting for GitHub Pages to deploy..."
+          # Sleep to allow GitHub Pages to update
+          sleep 60
+          
+      - name: Verify deployment
+        run: |
+          echo "Verifying deployment..."
+          node 1StopDashboard/check-deployment.js 
