@@ -27,6 +27,13 @@ jobs:
           # Disable caching to avoid the dependency resolution error
           # cache: 'npm'
           # cache-dependency-path: '**/package-lock.json'
+          
+      - name: Debug Node.js environment
+        run: |
+          echo "Node.js version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          echo "Environment variables:"
+          env | grep -i node || true
 
       - name: Install Dependencies
         run: |
@@ -38,7 +45,6 @@ jobs:
       - name: Build
         run: |
           cd 1StopDashboard
-          export NODE_OPTIONS=--openssl-legacy-provider
           # Disable treating warnings as errors
           export CI=false
           # Run the prepare-data and verify scripts to ensure correct revenue data

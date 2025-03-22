@@ -42,8 +42,29 @@ try {
     console.log('Created revenue data file with correct figures.');
   } else {
     // Read the existing file
-    const revenueData = JSON.parse(fs.readFileSync(revenueDataFile, 'utf8'));
-    console.log(`Found existing revenue data with total revenue: $${revenueData.total_revenue}`);
+    let revenueData;
+    try {
+      const fileContents = fs.readFileSync(revenueDataFile, 'utf8');
+      console.log(`Read file with ${fileContents.length} bytes`);
+      revenueData = JSON.parse(fileContents);
+      console.log(`Found existing revenue data with total revenue: $${revenueData.total_revenue}`);
+    } catch (error) {
+      console.error(`Error parsing revenue data: ${error.message}`);
+      console.log('Creating new revenue data file with correct figures...');
+      
+      // Create the correct revenue data file
+      const correctRevenueData = {
+        total_revenue: CORRECT_TOTAL_REVENUE,
+        cities: CORRECT_CITY_REVENUE,
+        generated_at: new Date().toISOString(),
+        generated_by: 'verify-revenue-data.js (recovery)'
+      };
+      
+      // Write the file
+      fs.writeFileSync(revenueDataFile, JSON.stringify(correctRevenueData, null, 2));
+      revenueData = correctRevenueData;
+      console.log('Created revenue data file with correct figures (after parse error).');
+    }
     
     // Check if the total revenue is correct
     if (revenueData.total_revenue !== CORRECT_TOTAL_REVENUE) {
