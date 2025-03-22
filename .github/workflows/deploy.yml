@@ -5,6 +5,13 @@ on:
     branches: [ main ]
     paths:
       - '1StopDashboard/**'
+  # Allow manual triggering
+  workflow_dispatch:
+
+# Permissions needed for GitHub Pages deployment
+permissions:
+  contents: write
+  pages: write
 
 jobs:
   build-and-deploy:
@@ -17,19 +24,24 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          # Remove the cache-dependency-path since package-lock.json might not exist
+          # or is not in the expected location
           cache: 'npm'
-          cache-dependency-path: 1StopDashboard/package-lock.json
 
       - name: Install Dependencies
         run: |
           cd 1StopDashboard
-          npm ci
+          # Use regular npm install instead of npm ci which requires package-lock.json
+          npm install
 
       - name: Build
         run: |
           cd 1StopDashboard
           export NODE_OPTIONS=--openssl-legacy-provider
           npm run build
+          # Debug output to show build results
+          echo "Build completed. Contents of build directory:"
+          ls -la build/
 
       - name: Deploy to proper directory
         run: |
