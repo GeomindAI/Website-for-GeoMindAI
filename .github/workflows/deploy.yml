@@ -24,9 +24,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          # Remove the cache-dependency-path since package-lock.json might not exist
-          # or is not in the expected location
-          cache: 'npm'
+          # Completely remove cache option to fix the error
 
       - name: Install Dependencies
         run: |
