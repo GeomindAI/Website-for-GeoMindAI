@@ -1,0 +1,217 @@
+.about-page {
+    margin-top: 80px;
+    background: white;
+    color: #282c34;
+}
+
+/* Hero */
+.about-hero {
+    padding: 5rem 10% 3rem;
+    text-align: center;
+}
+
+.about-hero h2 {
+    font-size: 2.5rem;
+    color: #282c34;
+    margin-bottom: 1rem;
+}
+
+.about-hero .divider {
+    width: 80px;
+    height: 3px;
+    background: #609981;
+    margin: 0 auto 2rem;
+}
+
+.about-summary {
+    max-width: 720px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444;
+}
+
+/* Products */
+.about-products {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 0 10% 4rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.product-item {
+    padding: 1.5rem 2rem;
+    border-left: 3px solid #609981;
+}
+
+.product-item h3 {
+    font-size: 1.15rem;
+    color: #282c34;
+    margin-bottom: 0.5rem;
+}
+
+.product-item p {
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Team */
+.team-section {
+    padding: 4rem 10%;
+    border-top: 1px solid #eee;
+}
+
+.team-section h2 {
+    font-size: 2rem;
+    text-align: center;
+    color: #282c34;
+    margin-bottom: 1rem;
+}
+
+.team-section .divider {
+    width: 60px;
+    height: 3px;
+    background: #609981;
+    margin: 0 auto 3rem;
+}
+
+.team-member {
+    display: flex;
+    gap: 3rem;
+    max-width: 880px;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+
+.member-photo {
+    flex-shrink: 0;
+}
+
+.member-photo img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #609981;
+}
+
+.member-info {
+    flex: 1;
+}
+
+.member-info h3 {
+    font-size: 1.5rem;
+    color: #282c34;
+    margin-bottom: 0.25rem;
+}
+
+.member-title {
+    font-size: 1rem;
+    color: #609981;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.credential-group {
+    margin-bottom: 1.25rem;
+}
+
+.credential-group h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #999;
+    margin-bottom: 0.5rem;
+}
+
+.credential-group ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.credential-group li {
+    font-size: 0.95rem;
+    color: #444;
+    line-height: 1.6;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.credential-group li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    background: #609981;
+    border-radius: 50%;
+}
+
+.member-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.member-links a {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #282c34;
+    font-size: 1.2rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.member-links a:hover {
+    background: #609981;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .about-hero {
+        padding: 3rem 6% 2rem;
+    }
+
+    .about-hero h2 {
+        font-size: 2rem;
+    }
+
+    .about-products {
+        grid-template-columns: 1fr;
+        padding: 0 6% 3rem;
+    }
+
+    .team-section {
+        padding: 3rem 6%;
+    }
+
+    .team-member {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .member-info h3 {
+        font-size: 1.3rem;
+    }
+
+    .credential-group li {
+        text-align: left;
+    }
+
+    .member-links {
+        justify-content: center;
+    }
+}

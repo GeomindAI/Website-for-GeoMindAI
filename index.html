@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/components/footer.css">
 </head>
 <body>
+    <script>console.log('Page body start:', performance.now().toFixed(0) + 'ms');</script>
     <div id="header-component"></div>
 
     <main class="hero-section">
@@ -49,13 +50,15 @@
                 </div>
             </div>
 
-            <div class="product-card non-hoverable">
-                <h3 class="section-subtitle">Sansona</h3>
+            <div class="product-card">
+                <h3 class="section-subtitle">Hadoona</h3>
                 <p class="product-description">
-                    AI-powered field data management system for geological data collection.
+                    Offline-capable field data collection and management system.
                 </p>
                 <div class="product-actions">
-                    <span class="coming-soon">Coming Soon</span>
+                    <a href="https://hadoona.com" class="learn-more">
+                        Learn More <span class="arrow">→</span>
+                    </a>
                 </div>
             </div>
         </div>
