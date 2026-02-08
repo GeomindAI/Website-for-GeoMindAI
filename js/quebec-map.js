@@ -61,8 +61,8 @@ class QuebecMap {
         
         // Initialize Supabase client first
         this.supabase = supabase.createClient(
-            'https://cnbpmepdmtpgrbllufcb.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYnBtZXBkbXRwZ3JibGx1ZmNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc5MjM4MjEsImV4cCI6MjA1MzQ5OTgyMX0.UqDleR4ucntrg9x6FNgJigKZjKiATFYiMiLiZZj3B2w'
+            'https://inhvrqyvuwlhcijlqnxr.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluaHZycXl2dXdsaGNpamxxbnhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1NTg3MDksImV4cCI6MjA4NjEzNDcwOX0.D_biN2-B-gKFPu6wByd-107ZFL18BR3xXRQgh3zNAoQ'
         );
 
         // Initialize map with bounds restriction
@@ -431,7 +431,9 @@ class QuebecMap {
 
     async calculateStatistics(bounds) {
         const [[minLat, minLng], [maxLat, maxLng]] = bounds;
-        
+
+        console.log('calculateStatistics called with bounds:', { minLat, minLng, maxLat, maxLng });
+
         try {
             const { data: points, error } = await this.supabase
                 .rpc('get_points_in_bounds', {
@@ -440,9 +442,21 @@ class QuebecMap {
                     max_lat: maxLat,
                     max_lng: maxLng
                 });
-    
+
+            console.log('Supabase RPC response - error:', error);
+            console.log('Supabase RPC response - points:', points);
+            console.log('Supabase RPC response - points count:', points ? points.length : 'null');
+
             if (error) throw error;
-    
+
+            if (!points || points.length === 0) {
+                console.warn('No points returned from Supabase for these bounds');
+                return;
+            }
+
+            // Log a sample point to see its structure
+            console.log('Sample point:', JSON.stringify(points[0]));
+
             // Calculate statistics
             const stats = {
                 AU: { anomalous: 0, strong: 0, maxProb: 0 },
@@ -451,16 +465,16 @@ class QuebecMap {
                 CO: { anomalous: 0, strong: 0, maxProb: 0 },
                 NI: { anomalous: 0, strong: 0, maxProb: 0 }
             };
-    
+
             points.forEach(point => {
                 Object.keys(stats).forEach(mineral => {
                     const mineral_lower = mineral.toLowerCase();
                     const pred = point[`${mineral_lower}_pred`];
                     const prob = point[`${mineral_lower}_prob`] || 0;
-                    
+
                     // Update max probability if this is higher
                     stats[mineral].maxProb = Math.max(stats[mineral].maxProb, prob);
-                    
+
                     if (pred === 2) {
                         stats[mineral].strong++;
                     } else if (pred === 1) {
@@ -468,23 +482,39 @@ class QuebecMap {
                     }
                 });
             });
-    
+
+            console.log('Calculated stats:', JSON.stringify(stats));
+
             // Create results container if it doesn't exist
-            if (!document.getElementById('selection-results')) {
-                document.getElementById('quebec-map').parentNode.appendChild(this.createResultsContainer());
+            const existingResults = document.getElementById('selection-results');
+            console.log('Existing results container:', existingResults);
+
+            if (!existingResults) {
+                const parent = document.getElementById('quebec-map').parentNode;
+                console.log('Parent element for results:', parent);
+                const container = this.createResultsContainer();
+                console.log('Created results container:', container);
+                parent.appendChild(container);
             }
-    
+
             // Display results
+            console.log('Calling displayResults with', points.length, 'points');
             this.displayResults(stats, points.length);
-    
+
         } catch (error) {
             console.error('Error fetching points:', error);
         }
     }
     
     displayResults(stats, totalPoints) {
+        console.log('displayResults called - totalPoints:', totalPoints);
         const resultsContainer = document.getElementById('selection-results');
-        if (!resultsContainer) return;
+        console.log('Results container found:', resultsContainer);
+        console.log('Results container display before:', resultsContainer?.style?.display);
+        if (!resultsContainer) {
+            console.error('Results container NOT found in DOM!');
+            return;
+        }
         
         const tbody = resultsContainer.querySelector('tbody');
         const totalSamplesDiv = resultsContainer.querySelector('.total-samples');
@@ -753,7 +783,19 @@ class QuebecMap {
 
     showMineralHeatmap(mineralType) {
         if (!mineralType) return;
-        
+
+        const mineral = MINERALS[mineralType];
+
+        // Create backdrop
+        const backdrop = document.createElement('div');
+        backdrop.style.cssText = `
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        `;
+        backdrop.onclick = () => { backdrop.remove(); modal.remove(); };
+
         const modal = document.createElement('div');
         modal.style.cssText = `
             position: fixed;
@@ -770,7 +812,7 @@ class QuebecMap {
         `;
 
         const closeButton = document.createElement('button');
-        closeButton.textContent = '×';
+        closeButton.textContent = '\u00d7';
         closeButton.style.cssText = `
             position: absolute;
             right: 10px;
@@ -788,16 +830,37 @@ class QuebecMap {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             color: #000;
         `;
-        closeButton.onclick = () => modal.remove();
+        closeButton.onclick = () => { backdrop.remove(); modal.remove(); };
 
         const img = document.createElement('img');
-        img.src = MINERALS[mineralType].imagePath;
-        img.alt = `${MINERALS[mineralType].name} heatmap`;
+        img.src = mineral.imagePath;
+        img.alt = `${mineral.name} heatmap`;
         img.style.width = '100%';
         img.style.borderRadius = '4px';
 
+        const downloadButton = document.createElement('a');
+        downloadButton.href = mineral.imagePath;
+        downloadButton.download = `${mineral.name}_Heatmap_Quebec.png`;
+        downloadButton.textContent = `Download ${mineral.name} Heatmap`;
+        downloadButton.style.cssText = `
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: #609981;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        `;
+        downloadButton.onmouseenter = () => { downloadButton.style.background = '#4c7a67'; };
+        downloadButton.onmouseleave = () => { downloadButton.style.background = '#609981'; };
+
         modal.appendChild(closeButton);
         modal.appendChild(img);
+        modal.appendChild(downloadButton);
+        document.body.appendChild(backdrop);
         document.body.appendChild(modal);
     }
 }

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - GeoMind AI</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/header.css">
+    <link rel="icon" type="image/svg+xml" href="/assets/Logo.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/components/footer.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="header-component"></div>
+
+    <main class="blog-page">
+        <!-- Featured Article -->
+        <article class="featured-article">
+            <div class="featured-image">
+                <img src="/assets/blog/gradient-descent.png" alt="Interactive LR - Gradient Descent Visualization">
+            </div>
+            <div class="featured-info">
+                <div class="featured-meta">
+                    January 28, 2025 &middot; <span class="category">Data</span>
+                </div>
+                <h2>The Interactive LR - Gradient Descent Visualization</h2>
+                <p>An interactive 3D visualization of gradient descent on a loss surface. Watch how parameters update in real-time with BGD, Mini-Batch, and SGD.</p>
+            </div>
+        </article>
+
+        <hr class="blog-divider">
+
+        <!-- Filter & Search -->
+        <div class="blog-controls">
+            <div class="filter-pills">
+                <button class="filter-pill active" data-filter="all">All</button>
+                <button class="filter-pill" data-filter="data-science">Data Science</button>
+                <button class="filter-pill" data-filter="machine-learning">Machine Learning</button>
+                <button class="filter-pill" data-filter="geoscience">Geoscience</button>
+                <button class="filter-pill" data-filter="math">Math</button>
+                <button class="filter-pill" data-filter="education">Education</button>
+            </div>
+            <div class="blog-search">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search articles..." id="blog-search-input">
+            </div>
+        </div>
+
+        <!-- Article List -->
+        <div class="article-list">
+            <a href="#" class="article-item" data-category="geoscience">
+                <span class="article-title">GeoJSON vs Shapefile vs GeoPackage</span>
+                <div class="article-right">
+                    <span class="article-category">Geoscience</span>
+                    <span class="article-date">Dec 25, 2025</span>
+                </div>
+            </a>
+            <a href="#" class="article-item" data-category="data-science">
+                <span class="article-title">Loss Space vs Data Space</span>
+                <div class="article-right">
+                    <span class="article-category">Data</span>
+                    <span class="article-date">Jan 8, 2025</span>
+                </div>
+            </a>
+            <a href="#" class="article-item" data-category="data-science">
+                <span class="article-title">Implementation of Mineral Targeting Platform</span>
+                <div class="article-right">
+                    <span class="article-category">Data</span>
+                    <span class="article-date">Jan 27, 2025</span>
+                </div>
+            </a>
+            <a href="#" class="article-item" data-category="data-science">
+                <span class="article-title">The Illustrated CNN</span>
+                <div class="article-right">
+                    <span class="article-category">Data</span>
+                    <span class="article-date">Jan 25, 2025</span>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    <div id="footer-component"></div>
+
+    <script src="/js/components.js"></script>
+    <script>
+        // Filter pills
+        document.querySelectorAll('.filter-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                const filter = pill.dataset.filter;
+                document.querySelectorAll('.article-item').forEach(item => {
+                    if (filter === 'all' || item.dataset.category === filter) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Search
+        document.getElementById('blog-search-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.article-item').forEach(item => {
+                const title = item.querySelector('.article-title').textContent.toLowerCase();
+                item.style.display = title.includes(query) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -115,41 +115,11 @@
     margin-bottom: 1.5rem;
 }
 
-.credential-group {
-    margin-bottom: 1.25rem;
-}
-
-.credential-group h4 {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #999;
-    margin-bottom: 0.5rem;
-}
-
-.credential-group ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.credential-group li {
+.member-bio {
     font-size: 0.95rem;
     color: #444;
-    line-height: 1.6;
-    padding-left: 1rem;
-    position: relative;
-}
-
-.credential-group li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.6em;
-    width: 5px;
-    height: 5px;
-    background: #609981;
-    border-radius: 50%;
+    line-height: 1.7;
+    margin-bottom: 0.75rem;
 }
 
 .member-links {
@@ -205,10 +175,6 @@
 
     .member-info h3 {
         font-size: 1.3rem;
-    }
-
-    .credential-group li {
-        text-align: left;
     }
 
     .member-links {

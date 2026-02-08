@@ -1,0 +1,240 @@
+.blog-page {
+    margin-top: 80px;
+    background: white;
+    color: #282c34;
+    min-height: calc(100vh - 80px);
+}
+
+/* Featured Article */
+.featured-article {
+    display: flex;
+    gap: 3rem;
+    padding: 3rem 10%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.featured-image {
+    flex: 0 0 45%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.featured-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 12px;
+}
+
+.featured-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.featured-meta {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 0.75rem;
+}
+
+.featured-meta .category {
+    color: #555;
+}
+
+.featured-info h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+    text-align: left;
+}
+
+.featured-info p {
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.7;
+}
+
+/* Divider */
+.blog-divider {
+    border: none;
+    border-top: 1px solid #e5e5e5;
+    margin: 0 10%;
+}
+
+/* Filter & Search Bar */
+.blog-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 10%;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filter-pills {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-pill {
+    padding: 0.4rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background: white;
+    color: #555;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+    border-color: #999;
+    color: #1a1a1a;
+}
+
+.filter-pill.active {
+    background: #1a1a1a;
+    color: white;
+    border-color: #1a1a1a;
+}
+
+.blog-search {
+    position: relative;
+}
+
+.blog-search input {
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.blog-search input:focus {
+    border-color: #999;
+}
+
+.blog-search i {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 0.85rem;
+}
+
+/* Article List */
+.article-list {
+    padding: 0 10%;
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+}
+
+.article-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #eee;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+}
+
+.article-item:hover {
+    background: #fafafa;
+    margin: 0 -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: 6px;
+}
+
+.article-title {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    flex: 1;
+}
+
+.article-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-shrink: 0;
+    margin-left: 2rem;
+}
+
+.article-category {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    color: #555;
+    white-space: nowrap;
+}
+
+.article-date {
+    font-size: 0.85rem;
+    color: #999;
+    white-space: nowrap;
+    min-width: 100px;
+    text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .featured-article {
+        flex-direction: column;
+        padding: 2rem 6%;
+        gap: 1.5rem;
+    }
+
+    .featured-image {
+        flex: none;
+        width: 100%;
+        max-height: 250px;
+    }
+
+    .featured-info h2 {
+        font-size: 1.5rem;
+    }
+
+    .blog-controls {
+        padding: 1.25rem 6%;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .blog-search input {
+        width: 100%;
+    }
+
+    .article-list {
+        padding: 0 6%;
+    }
+
+    .article-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .article-right {
+        margin-left: 0;
+    }
+
+    .blog-divider {
+        margin: 0 6%;
+    }
+}
